@@ -1,3 +1,5 @@
+import { AUTH_URL, SITE_ORIGIN } from './auth.mjs';
+
 export const stripeApiVersion = '2026-08-26.dahlia';
 
 export async function createStripeClient(apiKey = globalThis.Netlify?.env?.get('STRIPE_SECRET_KEY')) {
@@ -11,8 +13,8 @@ export async function getVerifiedUser(request, fetchAuth = fetch) {
     .map(part => part.trim())
     .filter(part => part.startsWith('__Secure-neon-auth.'))
     .join('; ');
-  const response = await fetchAuth('https://ep-cool-base-b1xdts2i.neonauth.c-5.eu-central-1.aws.neon.tech/neondb/auth/get-session?disableCookieCache=true', {
-    headers: { Origin: 'https://postibou.netlify.app', 'x-neon-auth-middleware': 'true', Cookie: cookies },
+  const response = await fetchAuth(AUTH_URL + '/get-session?disableCookieCache=true', {
+    headers: { Origin: SITE_ORIGIN, 'x-neon-auth-middleware': 'true', Cookie: cookies },
     signal: AbortSignal.timeout(12000)
   });
   const data = response.ok ? await response.json() : null;

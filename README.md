@@ -57,3 +57,17 @@ Les secrets futurs doivent rester côté serveur, jamais dans le dépôt public.
 Aucun secret Google n’est dans Netlify ou GitHub : les identifiants ont été transmis directement à Neon. L’application n’utilise pas le cache de sessions signé du SDK : son cookie `local.session_data` est écarté, et chaque session est validée auprès de Neon. La clé temporaire utilisée par le SDK pour ce cache écarté ne sert jamais à autoriser un utilisateur.
 
 Le client Google Postibou se trouve dans le projet Google existant Localia Partners. L’écran de consentement est commun aux clients de ce projet ; sa séparation dans un projet dédié pourra être effectuée ultérieurement.
+
+
+## Stripe subscriptions
+
+Checkout is initiated by the authenticated Postibou server. The Stripe product and monthly prices are configured in the Stripe account; the launch price is used before 1 January 2027, then the standard price is used. For launch-price subscriptions, the webhook attaches a subscription schedule that keeps the launch price through the last billing date in 2026 and changes to the standard price at the first billing date in 2027.
+
+Before enabling billing in Netlify, configure these server-only variables for Functions and production:
+
+- `STRIPE_SECRET_KEY`: a restricted Stripe API key with the permissions required for Checkout Sessions, subscriptions, schedules, and customer portal sessions.
+- `STRIPE_WEBHOOK_SECRET`: the signing secret for the webhook endpoint.
+
+Configure the Stripe webhook endpoint as `https://postibou.netlify.app/api/stripe/webhook` for `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, and `invoice.payment_failed`. Enable customer self-service cancellation at period end in the Stripe Customer Portal.
+
+Apply the additive Neon schema in `db/migrations/2026-10-07-stripe-billing.sql` before deploying these functions. The Checkout Session does not enable automatic tax; verify the business VAT/tax configuration before changing that setting.
