@@ -96,7 +96,7 @@
 
     <section class="view wrap legal-layout" id="view-informations" aria-label="Informations de préversion"><span class="eyebrow muted">PRÉVERSION</span><h1 style="margin-top:16px">Informations et confidentialité</h1><p>Les comptes par e-mail et Google utilisent Neon Auth. Les générations envoient le texte saisi à OpenRouter pour produire les versions Facebook et Instagram.</p><h2>Vos informations</h2><p>Neon Auth conserve votre compte et une empreinte de votre mot de passe. Un cookie sécurisé, inaccessible au JavaScript, conserve votre session. Postibou enregistre la date de début de l’essai et le nombre d’adaptations, sans conserver vos textes ni les publications générées. Le texte et le ton choisis sont transmis à OpenRouter pour la génération. Les modalités de conservation du fournisseur s’appliquent également. Ne saisissez pas d’informations confidentielles sur vos clients.</p><h2>Avant l’ouverture du service</h2><p>Les mentions légales, les coordonnées de l’éditeur, les conditions d’utilisation et d’abonnement, les informations complètes sur le traitement des données et la facturation devront être complétées avec les informations réelles du service.</p><h2>Les tarifs prévus</h2><p>7,90 € par mois pour les échéances jusqu’au 31 décembre 2026 inclus, puis 9,90 € à compter du premier renouvellement en 2027. Essai de sept jours avec dix adaptations, sans carte bancaire. Abonnement mensuel sans engagement, avec trente adaptations.</p><a class="button secondary" href="#accueil">Revenir à l’accueil</a></section>
   </main>
-  <footer class="footer"><div class="wrap"><div class="footer-inner"><a class="logo" href="#accueil" style="font-size:1.25rem">postibou<span class="brand-dot">.</span></a><div class="footer-links"><a href="#informations">Informations & confidentialité</a><a href="#administration">Aperçu administration</a><a href="#outil">Démonstration</a></div></div><p class="footer-note">Préversion de Postibou · Comptes e-mail disponibles · IA et paiements en préparation.</p></div></footer>
+  <footer class="footer"><div class="wrap"><div class="footer-inner"><a class="logo" href="#accueil" style="font-size:1.25rem">postibou<span class="brand-dot">.</span></a><div class="footer-links"><a href="#informations">Informations & confidentialité</a><a href="#administration">Aperçu administration</a><a href="#outil">Démonstration</a></div></div><p class="footer-note">Préversion de Postibou · Comptes e-mail et Google · Abonnements en préparation.</p></div></footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     'use strict';
@@ -134,7 +134,7 @@
       else if (state.user) $('#quota-text').textContent = state.credits + ' adaptation' + (state.credits === 1 ? '' : 's') + ' restante' + (state.credits === 1 ? '' : 's') + ' sur votre essai de 7 jours';
       else $('#quota-text').textContent = state.credits + ' crédits de démonstration disponibles';
       $('#generate-button').disabled = state.busy || state.credits === 0 || (state.user && !state.quotaReady);
-      $('#generate-button').textContent = state.user && state.credits === 0 ? 'Essai terminé ou crédits épuisés' : 'Adapter mon texte';
+      $('#generate-button').textContent = state.user && state.quotaError ? 'Essai indisponible' : state.user && state.credits === 0 ? 'Essai terminé ou crédits épuisés' : 'Adapter mon texte';
     }
     function showError(message) { $('#adapt-error').textContent = message; $('#adapt-error').style.display = 'block'; }
     function renderResults(outputs) {
