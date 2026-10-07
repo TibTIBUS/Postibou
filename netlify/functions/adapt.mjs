@@ -6,7 +6,7 @@ const COOKIE_PREFIX = '__Secure-neon-auth.';
 const headers = { 'Cache-Control': 'no-store, private', 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' };
 const errorReply = (code, status) => Response.json({ code }, { status, headers });
 
-export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getDatabase, getApiKey = () => globalThis.Netlify?.env?.get('OPENROUTER_API_KEY'), model = 'google/gemini-3.1-flash-lite' } = {}) {
+export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getDatabase, getApiKey = () => globalThis.Netlify?.env?.get('OPENROUTER_API_KEY'), model = 'openai/gpt-6-luna' } = {}) {
   return async request => {
     if (request.method !== 'POST') return errorReply('METHOD_NOT_ALLOWED', 405);
     if (request.headers.get('origin') !== SITE_ORIGIN || request.headers.get('sec-fetch-site') === 'cross-site') return errorReply('FORBIDDEN', 403);
