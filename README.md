@@ -21,14 +21,14 @@ L’interface est une démonstration. Aucun compte réel, appel IA ou paiement n
 
 1. Hébergement et API côté serveur pour l’IA, les quotas et les paiements.
 2. Authentification e-mail / mot de passe et Google, avec vérification e-mail et récupération du mot de passe.
-3. Base de données pour les utilisateurs, essais, abonnements et consommations. Neon et Neon Auth constituent une option ; aucun projet Neon n’a été créé pour ce dépôt.
+3. Base de données pour les utilisateurs, essais, abonnements et consommations. Neon et Neon Auth sont retenus ; le projet dédié Postibou est créé, mais l’interface n’est pas encore reliée à l’authentification.
 4. Contrôle côté serveur : sept jours d’essai, dix adaptations pendant l’essai, puis trente adaptations par période mensuelle. Une adaptation réussie donne les deux versions ; un échec ne consomme aucun crédit.
 5. Paiement, renouvellements, résiliation et accès jusqu’à la fin de la période payée.
 6. Protection de l’administration et mentions légales définitives.
 
 Les textes et résultats ne doivent pas être conservés dans un historique. Les secrets (base de données, IA, paiements et OAuth Google) doivent être configurés côté serveur, jamais dans ce fichier ou dans le dépôt public.
 
-Le dépôt contient le code ; aucun hébergement public de Postibou n’a encore été configuré.
+Le site est déployé sur https://postibou.netlify.app/ depuis la branche `main`, via l’équipe Netlify Localia existante.
 
 ## Architecture retenue
 
@@ -39,6 +39,16 @@ Le dépôt contient le code ; aucun hébergement public de Postibou n’a encore
 
 ## Déployer sur Netlify
 
-Importer le dépôt `TibTIBUS/Postibou` dans un projet Netlify dédié. La configuration `netlify.toml` définit la commande `node scripts/build.mjs` et le dossier publié `dist`. Les autres fichiers du dépôt ne sont pas publiés comme ressources statiques. Chaque modification de `main` sera déployée lorsque le dépôt sera relié à Netlify.
+Le dépôt `TibTIBUS/Postibou` est importé dans le projet Netlify dédié `postibou`. La configuration `netlify.toml` définit la commande `node scripts/build.mjs` et le dossier publié `dist`. Les autres fichiers du dépôt ne sont pas publiés comme ressources statiques. Les modifications de `main` déclenchent désormais un déploiement Netlify.
 
 Test local de la construction : `node scripts/build.mjs`. Cette étape ne connecte pas encore l’authentification, l’IA ou le paiement. Aucun abonnement fournisseur ni paiement client n’a été activé.
+
+## Infrastructure créée le 7 octobre 2026
+
+- Netlify : `postibou`, https://postibou.netlify.app/, relié au dépôt et déploiement initial vérifié.
+- Neon : projet `Postibou` (`fragrant-sound-24707274`), offre gratuite, AWS Francfort.
+- Branche Neon : `production` (`br-shiny-fog-b1oz5ggz`), prête.
+- Neon Auth : Managed Better Auth activé ; e-mail/mot de passe disponible et fournisseur Google partagé de développement présent.
+- À terminer : adresses de retour et domaines autorisés, vérification e-mail, configuration Google de production, raccordement des formulaires et du serveur, quotas réels, IA et Stripe. Les connexions et les crédits affichés par le site demeurent une démonstration.
+
+Aucun secret n’est inclus dans ces informations. Aucun paiement client n’a été activé.
