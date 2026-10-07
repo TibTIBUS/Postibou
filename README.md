@@ -29,3 +29,16 @@ L’interface est une démonstration. Aucun compte réel, appel IA ou paiement n
 Les textes et résultats ne doivent pas être conservés dans un historique. Les secrets (base de données, IA, paiements et OAuth Google) doivent être configurés côté serveur, jamais dans ce fichier ou dans le dépôt public.
 
 Le dépôt contient le code ; aucun hébergement public de Postibou n’a encore été configuré.
+
+## Architecture retenue
+
+- GitHub : code source.
+- Netlify : interface et fonctions serveur.
+- Neon + Neon Auth : comptes, essais, quotas et données d’abonnement.
+- Stripe : souscriptions, factures et résiliation.
+
+## Déployer sur Netlify
+
+Importer le dépôt `TibTIBUS/Postibou` dans un projet Netlify dédié. La configuration `netlify.toml` définit la commande `node scripts/build.mjs` et le dossier publié `dist`. Les autres fichiers du dépôt ne sont pas publiés comme ressources statiques. Chaque modification de `main` sera déployée lorsque le dépôt sera relié à Netlify.
+
+Test local de la construction : `node scripts/build.mjs`. Cette étape ne connecte pas encore l’authentification, l’IA ou le paiement. Aucun abonnement fournisseur ni paiement client n’a été activé.
