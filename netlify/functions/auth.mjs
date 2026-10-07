@@ -7,16 +7,21 @@ const routes = {
   signup: 'sign-up/email', login: 'sign-in/email', logout: 'sign-out',
   verify: 'email-otp/verify-email', resend: 'email-otp/send-verification-otp',
   recovery: 'email-otp/send-verification-otp', reset: 'email-otp/reset-password',
-  session: 'get-session'
+  session: 'get-session', google: 'sign-in/social'
 };
 const safeHeaders = { 'Cache-Control': 'no-store, private', 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' };
 export function rewriteCookie(cookie) {
   const parts = cookie.split(';').map(part => part.trim());
-  if (!parts[0].startsWith(COOKIE_PREFIX + '.')) return null;
+  if (!parts[0].startsWith(COOKIE_PREFIX + '.') || parts[0].startsWith(COOKIE_PREFIX + '.local.session_data=')) return null;
   return [parts[0], ...parts.slice(1).filter(part => !/^(domain|path|samesite|partitioned|secure|httponly)(=|$)/i.test(part)), 'Path=/', 'HttpOnly', 'Secure', 'SameSite=Lax'].join('; ');
 }
 function payload(action, input) {
   if (action === 'logout') return {};
+  if (action === 'google') return {
+    provider: 'google', disableRedirect: true,
+    callbackURL: SITE_ORIGIN + '/auth/google/retour',
+    errorCallbackURL: SITE_ORIGIN + '/auth/google/retour'
+  };
   const email = typeof input.email === 'string' ? input.email.trim() : '';
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('INVALID_INPUT');
   const data = { email };
@@ -72,6 +77,12 @@ export function createHandler(fetchAuth = fetch) {
       } else if (action === 'session') {
         const user = data?.user;
         result = { user: user?.emailVerified === true && data?.session ? { email: user.email, emailVerified: true } : null };
+      } else if (action === 'google') {
+        const destination = new URL(data.url);
+        const managedInit = new URL(AUTH_URL + '/sign-in/social/init');
+        const isManagedInit = destination.origin === managedInit.origin && destination.pathname === managedInit.pathname;
+        if (destination.protocol !== 'https:' || (!isManagedInit && destination.hostname !== 'accounts.google.com')) throw new Error('INVALID_OAUTH_URL');
+        result = { url: destination.toString() };
       } else {
         result = { success: true };
       }

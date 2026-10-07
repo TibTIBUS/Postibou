@@ -36,6 +36,7 @@ function configureAuthForm(mode) {
   $('#resend-code').hidden = !otp;
   $('#auth-back').hidden = ['signup', 'login'].includes(current);
   $('.auth-tabs').hidden = !['signup', 'login'].includes(current);
+  $('#google-button').hidden = !['signup', 'login'].includes(current);
   $$('[data-auth-tab]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.authTab === current)));
   authMessage('');
 }
@@ -102,7 +103,7 @@ async function runAuth(work) {
   if (authBusy) return;
   authBusy = true;
   authMessage('');
-  const controls = ['#auth-submit', '#resend-code', '#auth-back', '#forgot-password', '[data-auth-tab]'];
+  const controls = ['#auth-submit', '#resend-code', '#auth-back', '#forgot-password', '#google-button', '[data-auth-tab]'];
   controls.forEach(selector => $$(selector).forEach(el => { el.disabled = true; }));
   $('#auth-form').setAttribute('aria-busy', 'true');
   try { return await work(); }
@@ -155,6 +156,13 @@ $('#auth-form').addEventListener('submit', event => {
 });
 $('#forgot-password').addEventListener('click', () => configureAuthForm('recovery'));
 $('#auth-back').addEventListener('click', () => configureAuthForm('login'));
+$('#google-button').disabled = false;
+$('#google-button').addEventListener('click', () => runAuth(async () => {
+  const result = await authRequest('google', {});
+  // The server restricts the destination to Neon OAuth init or Google.
+  // Keep the managed challenge in HttpOnly cookies, never in browser storage.
+  location.assign(result.url);
+}));
 $('#resend-code').addEventListener('click', () => runAuth(async () => {
   if (Date.now() < codeCooldown) throw new Error('Attendez une minute entre deux envois.');
   await authRequest(state.authMode === 'reset' ? 'recovery' : 'resend', { email: $('#email').value.trim() });
@@ -176,4 +184,12 @@ $('#logout-button').addEventListener('click', async () => {
 window.addEventListener('pageshow', () => { if (state.route === 'compte') refreshSession(true); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && state.route === 'compte') refreshSession(true); });
 configureAuthForm('signup');
-refreshSession().finally(() => navigate(location.hash.slice(1)));
+refreshSession().finally(() => {
+  const error = new URLSearchParams(location.search).get('google') === 'erreur';
+  if (error) {
+    history.replaceState(null, '', '/#connexion');
+    configureAuthForm('login');
+    navigate('connexion');
+    authMessage('La connexion Google n’a pas abouti. Réessayez, ou connectez-vous par e-mail.');
+  } else navigate(location.hash.slice(1));
+});

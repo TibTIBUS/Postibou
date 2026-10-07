@@ -6,7 +6,7 @@ Site : https://postibou.netlify.app/ — déploiement automatique de `main` sur 
 
 ## Étape actuelle : comptes par e-mail
 
-Inscription e-mail/mot de passe, vérification par code e-mail, connexion, déconnexion et récupération par code sont reliées à Neon Auth. Google est désactivé dans l’interface en attendant les identifiants OAuth de production.
+Inscription e-mail/mot de passe, vérification par code e-mail, connexion, déconnexion et récupération par code sont reliées à Neon Auth. Google utilise désormais le client OAuth Postibou, configuré via l’API Neon. Google Auth Platform reste en mode Test : seuls les utilisateurs test autorisés par Google peuvent se connecter.
 
 Le serveur `netlify/functions/auth.mjs` limite les opérations autorisées, contrôle l’origine des requêtes et valide les sessions auprès de Neon. Il relaie uniquement les cookies Neon, avec `HttpOnly`, `Secure`, `SameSite=Lax`, sans domaine tiers. Les jetons ne sont pas exposés en JSON ni conservés dans localStorage. Les réponses ne sont jamais mises en cache. Le fournisseur assure le stockage des empreintes de mots de passe et les protections de son service d’authentification.
 
@@ -23,7 +23,7 @@ L’espace personnel expose uniquement l’adresse vérifiée. Les quotas réels
 
 ## Vérification
 
-Node 24, aucune dépendance de production.
+Node 24 ; SDK serveur officiel `@neondatabase/auth` épinglé à `0.5.0-beta`. Installer avec `npm ci`.
 
 ```sh
 node --test tests/auth.test.mjs
@@ -37,10 +37,18 @@ Tests serveur : origine, méthodes, validation, filtrage des cookies et champs, 
 
 ## Étapes suivantes
 
-1. Tester le compte réel du propriétaire, puis configurer Google avec une application OAuth de production.
+1. Tester la connexion Google réelle du propriétaire, puis compléter Google Auth Platform et son passage au public.
 2. Activer les essais : sept jours et dix adaptations ; abonnements : trente adaptations par période mensuelle. Contrôle serveur, aucun crédit consommé en cas d’échec.
 3. Relier l’IA aux textes personnalisés, sans historique.
 4. Stripe : 7,90 € pour les échéances jusqu’au 31 décembre 2026, puis 9,90 € au premier renouvellement en 2027 (Europe/Paris), résiliation à tout moment et accès jusqu’à la fin de la période payée.
 5. Administration sécurisée et informations légales réelles avant l’ouverture commerciale.
 
 Les secrets futurs doivent rester côté serveur, jamais dans le dépôt public. Identité : violet électrique `#6135e8`, citron vert `#d6ff44`, encre `#231749`.
+
+## Retour OAuth Google
+
+`POST /api/auth/google` fixe le fournisseur Google et les URL de retour côté serveur. Le navigateur suit l’URL d’initialisation fournie par Neon. `GET /auth/google/retour` utilise `processAuthMiddleware` du SDK officiel pour échanger le vérificateur Neon et le cookie de challenge contre le cookie de session. Le retour est toujours une URL fixe du site ; les paramètres OAuth sont retirés. Échec ou annulation : retour à la connexion avec un message.
+
+Aucun secret Google n’est dans Netlify ou GitHub : les identifiants ont été transmis directement à Neon. L’application n’utilise pas le cache de sessions signé du SDK : son cookie `local.session_data` est écarté, et chaque session est validée auprès de Neon. La clé temporaire utilisée par le SDK pour ce cache écarté ne sert jamais à autoriser un utilisateur.
+
+Le client Google Postibou se trouve dans le projet Google existant Localia Partners. L’écran de consentement est commun aux clients de ce projet ; sa séparation dans un projet dédié pourra être effectuée ultérieurement.

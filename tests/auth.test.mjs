@@ -62,3 +62,23 @@ test('preserves deletion cookies and does not leak upstream errors or transport 
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { code: 'SERVICE_UNAVAILABLE' });
 });
+test('Google fixes provider and callback server-side, preserves challenge but excludes local cache', async () => {
+  const handler = createHandler(async (url, options) => {
+    assert.ok(url.endsWith('/sign-in/social'));
+    assert.deepEqual(JSON.parse(options.body), {
+      provider: 'google', disableRedirect: true,
+      callbackURL: SITE_ORIGIN + '/auth/google/retour',
+      errorCallbackURL: SITE_ORIGIN + '/auth/google/retour'
+    });
+    return Response.json({ url: 'https://ep-cool-base-b1xdts2i.neonauth.c-5.eu-central-1.aws.neon.tech/neondb/auth/sign-in/social/init?token=opaque', redirect: false }, {
+      headers: { 'set-cookie': '__Secure-neon-auth.session_challenge=opaque; SameSite=None; Partitioned; Path=/' }
+    });
+  });
+  const response = await handler(request('google', { provider: 'github', callbackURL: 'https://attacker.example' }));
+  assert.equal(response.status, 200);
+  assert.match((await response.json()).url, /\/sign-in\/social\/init\?/);
+  assert.match(response.headers.get('set-cookie'), /HttpOnly; Secure; SameSite=Lax/);
+  assert.equal(rewriteCookie('__Secure-neon-auth.local.session_data=unused'), null);
+  const bad = await createHandler(async () => Response.json({ url: 'https://attacker.example/steal' }))(request('google', {}));
+  assert.equal(bad.status, 503);
+});
