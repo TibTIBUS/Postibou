@@ -5,4 +5,5 @@ const projectRoot = new URL('../', import.meta.url);
 const publishDirectory = new URL('dist/', projectRoot);
 await mkdir(publishDirectory, { recursive: true });
 await copyFile(new URL('index.html', projectRoot), new URL('index.html', publishDirectory));
+await copyFile(new URL('auth.js', projectRoot), new URL('auth.js', publishDirectory));
 console.log(`Interface prête : ${fileURLToPath(publishDirectory)}`);
