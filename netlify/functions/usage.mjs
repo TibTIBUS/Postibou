@@ -27,15 +27,31 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase } = {}) {
         ON CONFLICT (user_id) DO NOTHING
       `;
       const rows = await sql`
-        SELECT plan, trial_started_at, trial_ends_at, adaptations_used
+        SELECT plan, trial_started_at, trial_ends_at, adaptations_used,
+               stripe_subscription_status, subscription_period_start, subscription_period_end,
+               usage_period_start, cancel_at_period_end
         FROM public.postibou_entitlements WHERE user_id = ${session.user.id}::uuid
       `;
       const account = rows[0];
       if (!account) return reply({ code: 'ACCOUNT_UNAVAILABLE' }, 503);
-      const active = account.plan === 'trial' && new Date(account.trial_ends_at).getTime() > Date.now();
-      const used = Number(account.adaptations_used);
-      const remaining = active ? Math.max(0, 10 - used) : 0;
-      return reply({ plan: account.plan, trialStartedAt: account.trial_started_at, trialEndsAt: account.trial_ends_at, adaptationsUsed: used, creditsRemaining: remaining, active });
+      const trialActive = account.plan === 'trial' && new Date(account.trial_ends_at).getTime() > Date.now();
+      const subscriptionActive = account.plan === 'monthly'
+        && ['active', 'past_due'].includes(account.stripe_subscription_status)
+        && account.subscription_period_end
+        && new Date(account.subscription_period_end).getTime() > Date.now();
+      const active = trialActive || subscriptionActive;
+      const quota = account.plan === 'monthly' ? 30 : 10;
+      const periodReset = account.plan === 'monthly'
+        && String(account.usage_period_start || '') !== String(account.subscription_period_start || '');
+      const used = periodReset ? 0 : Number(account.adaptations_used);
+      const remaining = active ? Math.max(0, quota - used) : 0;
+      return reply({
+        plan: account.plan, trialStartedAt: account.trial_started_at, trialEndsAt: account.trial_ends_at,
+        subscriptionStatus: account.stripe_subscription_status, subscriptionPeriodStart: account.subscription_period_start,
+        subscriptionPeriodEnd: account.subscription_period_end, cancelAtPeriodEnd: account.cancel_at_period_end,
+        hasBilling: Boolean(account.stripe_customer_id),
+        adaptationsUsed: used, quota, creditsRemaining: remaining, active
+      });
     } catch {
       return reply({ code: 'SERVICE_UNAVAILABLE' }, 503);
     }
@@ -50,3 +66,4 @@ async function createDatabase() {
 }
 
 export default createUsageHandler();
+

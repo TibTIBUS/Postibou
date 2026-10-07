@@ -45,17 +45,31 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
       const reserved = await sql`
         WITH usage AS (
           UPDATE public.postibou_entitlements
-          SET adaptations_used = adaptations_used + 1, updated_at = now()
-          WHERE user_id = ${userId}::uuid AND plan = 'trial' AND trial_ends_at > now() AND adaptations_used < 10
-          RETURNING user_id, adaptations_used, trial_ends_at
+          SET adaptations_used = CASE
+                WHEN plan = 'monthly' AND usage_period_start IS DISTINCT FROM subscription_period_start THEN 1
+                ELSE adaptations_used + 1
+              END,
+              usage_period_start = CASE WHEN plan = 'monthly' THEN subscription_period_start ELSE usage_period_start END,
+              updated_at = now()
+          WHERE user_id = ${userId}::uuid AND (
+            (plan = 'trial' AND trial_ends_at > now() AND adaptations_used < 10)
+            OR
+            (plan = 'monthly' AND stripe_subscription_status IN ('active', 'past_due')
+              AND subscription_period_end > now()
+              AND (CASE WHEN usage_period_start IS DISTINCT FROM subscription_period_start THEN 0 ELSE adaptations_used END) < 30)
+          )
+          RETURNING user_id, adaptations_used, trial_ends_at, plan, subscription_period_end
         )
         INSERT INTO public.postibou_adaptation_reservations (id, user_id, status)
         SELECT ${reservationId}::uuid, user_id, 'reserved' FROM usage
         RETURNING id
       `;
       if (!reserved.length) {
-        const rows = await sql`SELECT trial_ends_at, adaptations_used FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
-        return errorReply(rows[0]?.trial_ends_at && new Date(rows[0].trial_ends_at).getTime() <= Date.now() ? 'TRIAL_EXPIRED' : 'QUOTA_EXHAUSTED', 429);
+        const rows = await sql`SELECT plan, trial_ends_at, adaptations_used, stripe_subscription_status, subscription_period_end, subscription_period_start, usage_period_start FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
+        const account = rows[0];
+        if (account?.plan === 'monthly' && (!['active', 'past_due'].includes(account.stripe_subscription_status) || new Date(account.subscription_period_end).getTime() <= Date.now())) return errorReply('SUBSCRIPTION_INACTIVE', 403);
+        if (account?.plan === 'trial' && new Date(account.trial_ends_at).getTime() <= Date.now()) return errorReply('TRIAL_EXPIRED', 429);
+        return errorReply('QUOTA_EXHAUSTED', 429);
       }
     } catch {
       return errorReply('SERVICE_UNAVAILABLE', 503);
@@ -99,8 +113,11 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
         UPDATE public.postibou_adaptation_reservations SET status = 'completed', completed_at = now()
         WHERE id = ${reservationId}::uuid AND user_id = ${userId}::uuid AND status = 'reserved'
       `;
-      const rows = await sql`SELECT adaptations_used, trial_ends_at FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
-      return Response.json({ facebook: output.facebook.trim(), instagram: output.instagram.trim(), creditsRemaining: Math.max(0, 10 - Number(rows[0].adaptations_used)), trialEndsAt: rows[0].trial_ends_at }, { headers });
+      const rows = await sql`SELECT plan, adaptations_used, trial_ends_at, subscription_period_start, subscription_period_end, usage_period_start FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
+      const account = rows[0];
+      const quota = account.plan === 'monthly' ? 30 : 10;
+      const used = account.plan === 'monthly' && account.usage_period_start !== account.subscription_period_start ? 0 : Number(account.adaptations_used);
+      return Response.json({ facebook: output.facebook.trim(), instagram: output.instagram.trim(), plan: account.plan, creditsRemaining: Math.max(0, quota - used), trialEndsAt: account.trial_ends_at, periodEndsAt: account.subscription_period_end }, { headers });
     } catch {
       try {
         await sql`
@@ -126,3 +143,4 @@ async function createDatabase() {
 }
 
 export default createAdaptHandler();
+

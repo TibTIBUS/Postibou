@@ -18,8 +18,8 @@ function makeDatabase(initialUsed = 0) {
     if (query.includes('UPDATE public.postibou_adaptation_reservations SET status = \'completed\'')) {
       db.reservations.set(values[0], 'completed'); return [{ id: values[0] }];
     }
-    if (query.includes('SELECT adaptations_used, trial_ends_at')) return [{ adaptations_used: db.used, trial_ends_at: db.end }];
-    if (query.includes('SELECT trial_ends_at, adaptations_used')) return [{ trial_ends_at: db.end, adaptations_used: db.used }];
+    if (query.includes('SELECT plan, adaptations_used')) return [{ plan: 'trial', adaptations_used: db.used, trial_ends_at: db.end, subscription_period_start: null, subscription_period_end: null, usage_period_start: null }];
+    if (query.includes('SELECT plan, trial_ends_at')) return [{ plan: 'trial', trial_ends_at: db.end, adaptations_used: db.used, stripe_subscription_status: null, subscription_period_end: null, subscription_period_start: null, usage_period_start: null }];
     if (query.includes('WITH released AS')) {
       const id = values[0];
       if (db.reservations.get(id) === 'reserved') { db.reservations.set(id, 'refunded'); db.used--; }
@@ -45,7 +45,7 @@ test('generates two adapted publications and reserves one trial credit', async (
   assert.equal(output.creditsRemaining, 9);
   assert.equal(db.used, 1);
   assert.match(modelRequest.messages[1].content, /Terrasse terminée/);
-  assert.equal(modelRequest.model, 'google/gemini-3.1-flash-lite');
+  assert.equal(modelRequest.model, 'openai/gpt-6-luna');
 });
 
 test('refunds the reserved credit when OpenRouter fails', async () => {
@@ -66,6 +66,28 @@ test('enforces the ten credit limit before calling OpenRouter', async () => {
   assert.equal(response.status, 429);
   assert.deepEqual(await response.json(), { code: 'QUOTA_EXHAUSTED' });
   assert.equal(calls, 0);
+});
+
+test('uses the monthly allowance and reports credits from the active billing period', async () => {
+  const db = { used: 8, reservations: new Map(), periodStart: '2026-10-01T00:00:00.000Z', periodEnd: '2026-11-01T00:00:00.000Z' };
+  db.sql = async (strings, ...values) => {
+    const query = strings.join('?');
+    if (query.includes('WITH usage AS')) {
+      assert.match(query, /IS DISTINCT FROM subscription_period_start/);
+      if (db.used >= 30) return [];
+      db.used++; db.reservations.set(values[1], 'reserved'); return [{ id: values[1] }];
+    }
+    if (query.includes("SET status = 'completed'")) { db.reservations.set(values[0], 'completed'); return [{ id: values[0] }]; }
+    if (query.includes('SELECT plan, adaptations_used')) return [{ plan: 'monthly', adaptations_used: db.used, trial_ends_at: new Date(Date.now() + 86400000).toISOString(), subscription_period_start: db.periodStart, subscription_period_end: db.periodEnd, usage_period_start: db.periodStart }];
+    return [];
+  };
+  const handler = createAdaptHandler({ fetchAuth: sessionFetch, getDatabase: () => db.sql, getApiKey: () => 'test-key', fetchModel: async () => Response.json({ choices: [{ message: { content: JSON.stringify({ facebook: 'Facebook prêt', instagram: 'Instagram prêt' }) } }] }) });
+  const response = await handler(request({ source: 'Chantier terminé', tone: 'warm' }));
+  const output = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(output.plan, 'monthly');
+  assert.equal(output.creditsRemaining, 21);
+  assert.equal(db.used, 9);
 });
 
 test('rejects an unauthenticated or cross-origin generation', async () => {
