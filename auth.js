@@ -10,7 +10,7 @@ function configureAuthForm(mode) {
   state.authMode = ['signup', 'login', 'verify', 'recovery', 'reset'].includes(mode) ? mode : 'login';
   const current = state.authMode;
   const copy = {
-    signup: ['Bienvenue chez Postibou.', 'Créez votre compte. L’outil est encore en démonstration.', 'Créer mon compte'],
+    signup: ['Bienvenue chez Postibou.', 'Créez votre compte et démarrez votre essai gratuit.', 'Créer mon compte'],
     login: ['Content de vous retrouver.', 'Connectez-vous à votre espace personnel.', 'Se connecter'],
     verify: ['Vérifiez votre e-mail.', 'Saisissez le code à 6 chiffres reçu par e-mail. Pensez à regarder vos indésirables.', 'Vérifier mon adresse'],
     recovery: ['Mot de passe oublié ?', 'Nous vous enverrons un code pour choisir un nouveau mot de passe.', 'Recevoir un code'],
@@ -68,6 +68,7 @@ async function authRequest(action, body) {
 }
 function renderSession(user) {
   state.user = user;
+  if (!user) { state.credits = 10; state.quotaReady = false; state.quotaError = false; }
   const nav = $('.nav-actions .login-link');
   nav.textContent = user ? 'Mon compte' : 'Se connecter';
   nav.href = user ? '#compte' : '#connexion';
@@ -82,6 +83,18 @@ async function refreshSession(guard = false) {
   try {
     const result = await sessionCheck;
     renderSession(result.user);
+    if (result.user) {
+      state.quotaReady = false;
+      try {
+        const response = await fetch('/api/usage', { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000) });
+        const usage = await response.json();
+        if (!response.ok) throw new Error('Usage unavailable');
+        state.credits = Number(usage.creditsRemaining) || 0;
+        state.quotaReady = true;
+        state.quotaError = false;
+      } catch { state.credits = 0; state.quotaReady = false; state.quotaError = true; }
+      updateQuota();
+    } else updateQuota();
     if (guard && !result.user && state.route === 'compte') {
       history.replaceState(null, '', '#connexion');
       navigate('connexion');

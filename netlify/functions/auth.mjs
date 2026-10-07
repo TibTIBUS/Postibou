@@ -39,7 +39,7 @@ function payload(action, input) {
   return data;
 }
 // Validate every session upstream. Never expose session tokens in JSON or storage.
-export function createHandler(fetchAuth = fetch) {
+export function createHandler(fetchAuth = fetch, getDatabase = createDatabase) {
   return async request => {
     const action = new URL(request.url).pathname.slice('/api/auth/'.length);
     const reply = (data, status = 200, headers = {}) => Response.json(data, { status, headers: { ...safeHeaders, ...headers } });
@@ -85,6 +85,16 @@ export function createHandler(fetchAuth = fetch) {
         result = { url: destination.toString() };
       } else {
         result = { success: true };
+        if (action === 'signup' && typeof data?.user?.id === 'string') {
+          try {
+            const sql = await getDatabase();
+            await sql`
+              INSERT INTO public.postibou_entitlements (user_id)
+              SELECT id FROM neon_auth."user" WHERE id = ${data.user.id}::uuid
+              ON CONFLICT (user_id) DO NOTHING
+            `;
+          } catch { /* The first verified sign-in initializes the trial if setup is incomplete. */ }
+        }
       }
       return new Response(JSON.stringify(result), { status: upstream.status, headers: out });
     } catch (error) {
@@ -92,4 +102,12 @@ export function createHandler(fetchAuth = fetch) {
     }
   };
 }
+
+async function createDatabase() {
+  const connectionString = globalThis.Netlify?.env?.get('DATABASE_URL');
+  if (!connectionString) throw new Error('DATABASE_URL is not configured');
+  const { neon } = await import('@neondatabase/serverless');
+  return neon(connectionString);
+}
+
 export default createHandler();

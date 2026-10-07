@@ -4,7 +4,7 @@ Interface française pour transformer le texte d’un artisan en publications Fa
 
 Site : https://postibou.netlify.app/ — déploiement automatique de `main` sur Netlify.
 
-## Étape actuelle : comptes par e-mail
+## Comptes et essai gratuit
 
 Inscription e-mail/mot de passe, vérification par code e-mail, connexion, déconnexion et récupération par code sont reliées à Neon Auth. Google utilise désormais le client OAuth Postibou, configuré via l’API Neon. Google Auth Platform reste en mode Test : seuls les utilisateurs test autorisés par Google peuvent se connecter.
 
@@ -12,7 +12,13 @@ Le serveur `netlify/functions/auth.mjs` limite les opérations autorisées, cont
 
 Le domaine autorisé est `https://postibou.netlify.app`. En cas de changement de domaine, mettre à jour `SITE_ORIGIN` et les domaines autorisés dans Neon. L’URL publique Neon figure dans le code ; elle n’est pas un secret. Aucun mot de passe de base de données ou clé administrative n’est nécessaire à cette étape.
 
-L’espace personnel expose uniquement l’adresse vérifiée. Les quotas réels et l’essai ne commencent pas encore : l’IA est en préparation. L’outil et l’administration restent des démonstrations (profils fictifs), sans historique de textes. Stripe et les paiements ne sont pas actifs.
+Après une inscription, Neon conserve l’essai de sept jours et ses dix adaptations dans `public.postibou_entitlements`. Une ligne liée à l’identifiant Neon Auth contient seulement le début et la fin de l’essai ainsi que le compteur. Les réservations techniques ne contiennent aucun texte. Les publications ne sont pas conservées par Postibou.
+
+La fonction `netlify/functions/adapt.mjs` vérifie la session Neon et l’adresse vérifiée avant de réserver un crédit. Elle envoie le texte et le ton à OpenRouter, valide la réponse structurée Facebook/Instagram, puis marque la réservation terminée. Si la génération échoue, elle rembourse le crédit. Le texte n’est pas écrit dans Neon. Le modèle par défaut est `google/gemini-3.1-flash-lite` ; le fournisseur et le modèle peuvent évoluer.
+
+Avant la première génération, configurer les variables d’environnement Netlify avec le scope **Functions** : `OPENROUTER_API_KEY` et `DATABASE_URL` (URL de connexion Neon pour la branche `production`, SSL activé). Les secrets ne sont pas dans le dépôt ni `netlify.toml`. Modifier une variable nécessite un nouveau déploiement.
+
+Les essais se créent lors de l’inscription quand la base est configurée ; le premier accès authentifié initialise aussi l’essai pour les comptes déjà créés. L’espace personnel et l’administration restent partiellement démonstratifs. Les abonnements mensuels Stripe et les quotas abonnés ne sont pas activés.
 
 ## Architecture
 
@@ -26,7 +32,7 @@ L’espace personnel expose uniquement l’adresse vérifiée. Les quotas réels
 Node 24 ; SDK serveur officiel `@neondatabase/auth` épinglé à `0.5.0-beta`. Installer avec `npm ci`.
 
 ```sh
-node --test tests/auth.test.mjs
+node --test tests/*.test.mjs
 node --check auth.js
 node scripts/build.mjs
 ```
@@ -37,11 +43,10 @@ Tests serveur : origine, méthodes, validation, filtrage des cookies et champs, 
 
 ## Étapes suivantes
 
-1. Tester la connexion Google réelle du propriétaire, puis compléter Google Auth Platform et son passage au public.
-2. Activer les essais : sept jours et dix adaptations ; abonnements : trente adaptations par période mensuelle. Contrôle serveur, aucun crédit consommé en cas d’échec.
-3. Relier l’IA aux textes personnalisés, sans historique.
-4. Stripe : 7,90 € pour les échéances jusqu’au 31 décembre 2026, puis 9,90 € au premier renouvellement en 2027 (Europe/Paris), résiliation à tout moment et accès jusqu’à la fin de la période payée.
-5. Administration sécurisée et informations légales réelles avant l’ouverture commerciale.
+1. Ajouter les deux secrets Netlify et tester une adaptation réelle.
+2. Stripe : 7,90 € pour les échéances jusqu’au 31 décembre 2026, puis 9,90 € au premier renouvellement en 2027 (Europe/Paris), résiliation à tout moment et accès jusqu’à la fin de la période payée.
+3. Ajouter le quota de trente adaptations par période d’abonnement, l’administration sécurisée et les informations légales réelles avant l’ouverture commerciale.
+4. Compléter Google Auth Platform et son passage au public avant d’ouvrir l’inscription à tous.
 
 Les secrets futurs doivent rester côté serveur, jamais dans le dépôt public. Identité : violet électrique `#6135e8`, citron vert `#d6ff44`, encre `#231749`.
 
