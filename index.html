@@ -118,6 +118,44 @@
     .magic-card-state{position:absolute;top:-11px;right:18px;display:grid;place-items:center;width:26px;height:26px;background:var(--violet-dark);color:var(--lime);border-radius:50%;box-shadow:0 4px 12px #6135e830;pointer-events:none;animation:magic-glint 1.5s ease-in-out infinite}
     @keyframes magic-glint{0%,100%{transform:scale(.9) rotate(-12deg);opacity:.7}50%{transform:scale(1.1) rotate(12deg);opacity:1}}
     @media(prefers-reduced-motion:reduce){.magic-card-state{animation:none}.magic-word{will-change:auto}}
+    /* L’atelier : la transformation occupe toute la largeur de l’accueil. */
+    .atelier-home.hero{display:block;padding-block:44px 40px}
+    .atelier-intro{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:36px;align-items:center;margin-bottom:30px}
+    .atelier-intro h1{font-size:clamp(2.4rem,4.15vw,3.5rem);line-height:1.08;margin:16px 0}
+    .atelier-intro .lead{max-width:790px;font-size:1.0625rem;margin-bottom:0}
+    .atelier-intro-actions{display:grid;gap:12px;text-align:center}
+    .atelier-intro-actions .fine{font-size:.8125rem;line-height:1.55;margin:0}
+    .atelier-demo.hero-art{padding:26px;background:#eee7fc;border-radius:24px;box-shadow:0 12px 36px #6135e808}
+    .atelier-demo-head{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:20px}
+    .atelier-demo-head h2{font-size:1.25rem;line-height:1.35;letter-spacing:-.03em;margin:0}
+    .atelier-demo-head .magic-replay{flex:none;min-height:44px;margin:0;padding:8px 0;font-size:.8125rem;white-space:nowrap}
+    .magic-replay[hidden]{display:none}
+    .atelier-flow{display:grid;grid-template-columns:230px minmax(0,1fr);gap:34px;align-items:start}
+    .atelier-source{position:relative;padding:18px;background:#f8f5ff;border:1px solid #e3d9f6;border-radius:17px;margin-top:10px}
+    .atelier-source .sample-note{padding:0;border:0;margin:0 0 16px}
+    .atelier-source .eyebrow{display:block;font-size:.875rem;letter-spacing:0;text-transform:none;margin-bottom:12px}
+    .atelier-source .sample-note p{background:#fff;border:1px solid #eee8f8;border-radius:12px;padding:15px;margin:0;font-size:.9375rem;line-height:1.55}
+    .atelier-source .atelier-magic-trigger{width:100%;padding:12px 8px;font-size:.875rem;min-height:48px}
+    .atelier-example-note{display:block;color:var(--muted);font-size:.6875rem;line-height:1.5;margin-top:11px;text-align:center}
+    .atelier-connector{position:absolute;right:-35px;top:92px;width:35px;height:44px;color:#a68adf;pointer-events:none}
+    .atelier-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:stretch}
+    .atelier-results .post{padding:20px;border-radius:16px;min-width:0}
+    .atelier-results .post+.post{margin-top:0}
+    .atelier-results .post[hidden]{display:none}
+    .atelier-results .post-heading{font-size:.875rem;letter-spacing:-.015em;line-height:1.4;margin-bottom:14px}
+    .atelier-results .demo-step{font-weight:600;color:var(--violet-dark)}
+    .atelier-results .post p{font-size:.90625rem;line-height:1.6;margin-bottom:11px}
+    .atelier-results .post p:last-child{margin-bottom:0}
+    .atelier-results .hashtags{display:block;font-size:.8125rem;line-height:1.65;overflow-wrap:anywhere}
+    .atelier-tabs[hidden]{display:none}
+    .atelier-tabs:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px;margin-bottom:12px;border:1px solid #e0d5f5;border-radius:13px;background:#f8f5ff}
+    .atelier-tabs button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px;border:1px solid transparent;border-radius:9px;background:none;font-size:.875rem;font-weight:650}
+    .atelier-tabs button[aria-selected="true"]{border-color:#d7c7f6;background:#fff;color:var(--violet-dark);box-shadow:0 2px 8px #23174907}
+    .atelier-tabs .network{width:25px;height:25px;border-radius:7px;font-size:.9375rem}
+    @media(max-width:1050px){.atelier-intro{grid-template-columns:minmax(0,1fr) 210px;gap:24px}.atelier-intro h1{font-size:2.8rem}.atelier-flow{grid-template-columns:200px minmax(0,1fr);gap:26px}.atelier-source{padding:15px}.atelier-connector{right:-27px;width:27px}.atelier-results{gap:13px}.atelier-results .post{padding:17px}}
+    @media(max-width:900px){.atelier-home.hero{padding-block:34px}.atelier-intro{grid-template-columns:1fr;gap:20px;margin-bottom:26px}.atelier-intro h1{max-width:740px}.atelier-intro-actions{justify-self:start;max-width:320px;width:100%}.atelier-demo.hero-art{padding:20px}.atelier-flow{grid-template-columns:1fr;gap:18px}.atelier-source{margin-top:0}.atelier-connector{display:none}.atelier-source .sample-note{margin-bottom:14px}.atelier-source .atelier-magic-trigger{width:auto;padding-inline:22px}.atelier-example-note{display:inline-block;margin:0 0 0 12px;text-align:left}.atelier-results{grid-template-columns:1fr}.atelier-results .post{padding:22px}.atelier-results .post p{font-size:.9375rem}.atelier-results .hashtags{font-size:.875rem}}
+    @media(max-width:720px){.atelier-home.hero{padding-block:28px 32px}.atelier-intro h1{font-size:clamp(2rem,8.3vw,2.9rem);line-height:1.1;margin:15px 0}.atelier-intro .lead{font-size:1rem;line-height:1.6}.atelier-intro-actions{justify-self:stretch;max-width:none;gap:10px}.atelier-demo.hero-art{padding:16px;border-radius:20px}.atelier-demo-head{gap:12px;align-items:start;margin-bottom:16px}.atelier-demo-head h2{font-size:1.0625rem;line-height:1.4;max-width:230px}.atelier-demo-head .magic-replay{font-size:.75rem;min-height:44px;padding:4px 0;white-space:normal;text-align:right;max-width:98px}.atelier-source{padding:14px;border-radius:14px}.atelier-source .atelier-magic-trigger{width:100%}.atelier-example-note{display:block;margin:9px 0 0;text-align:center}.atelier-source .sample-note p{padding:14px}.atelier-results .post{padding:18px}.atelier-results .post-heading{margin-bottom:15px}}
+    @media(max-width:360px){.atelier-home.wrap{padding-inline:16px}.atelier-demo.hero-art{padding:12px}.atelier-demo-head h2{font-size:1rem}.atelier-results .post{padding:16px}}
 </style>
 </head>
 <body>
@@ -128,13 +166,31 @@
   </div></header>
   <main>
     <section class="view active" id="view-accueil" aria-label="Accueil">
-      <div class="wrap hero">
-        <div><span class="pill accent-pill">À vous de briller.</span><h1>Votre savoir-faire.<br>Les mots qui le font<br><span class="highlight">rayonner.</span></h1><p class="lead">Collez votre texte. Postibou l’adapte pour Facebook et Instagram. Vous n’avez plus qu’à copier et publier.</p><div class="hero-actions"><a class="button primary" href="#connexion" data-auth="signup">Essayer gratuitement</a><a class="button secondary" href="#outil">Voir la démonstration</a></div><p class="fine">7 jours · 10 adaptations · Sans carte bancaire</p></div>
-        <div class="hero-art" aria-label="Exemple de réécriture avec Sublimer mon texte">
-          <div class="sample-note"><span class="eyebrow">Votre texte</span><p>« On a terminé la terrasse en bois. Merci aux clients pour leur confiance. »</p></div>
-          <div class="flow-caption"><span>✨ Sublimer mon texte</span><span>Exemple préparé</span></div>
-          <div class="post"><div class="post-heading"><span class="network" aria-hidden="true">f</span>Facebook<span class="mini-tag">Une histoire à partager</span></div><p>Une terrasse terminée, et de nouvelles envies pour l’extérieur. 🌿</p><p>Nous venons de terminer cette terrasse en bois. Une réalisation que nous sommes heureux de partager ici, accompagnée d’un grand merci à nos clients pour leur confiance.</p><p>Une terrasse peut faire naître bien des idées : un coin pour prendre son café, une table autour de laquelle se retrouver, ou simplement un endroit où faire une pause. À chacun d’imaginer ce qu’il aimerait y vivre.</p><p>Aujourd’hui, nous vous présentons le résultat de ce chantier. Et vous, quelle place donneriez-vous à une terrasse dans votre extérieur ? Partagez vos idées en commentaire.</p></div>
-          <div class="post"><div class="post-heading"><span class="network instagram" aria-hidden="true">◎</span>Instagram<span class="mini-tag">Une accroche qui donne envie</span></div><p>Une terrasse en bois. Et tout un extérieur à imaginer. 🌿</p><p>Cette réalisation est terminée : nous vous la partageons aujourd’hui, avec un grand merci à nos clients pour leur confiance.</p><p>Un café dehors, un repas à plusieurs, une pause au calme… À quoi ressemblerait votre moment idéal sur une terrasse ?</p><p>Dites-nous ce que vous aimeriez créer chez vous.</p><span class="hashtags">#TerrasseBois #AménagementExtérieur #Artisan #ProjetTerrasse</span></div>
+      <div class="wrap hero atelier-home">
+        <div class="atelier-intro">
+          <div class="atelier-intro-copy"><span class="pill accent-pill">À vous de briller.</span><h1>Votre savoir-faire.<br>Les mots qui le font <span class="highlight">rayonner.</span></h1><p class="lead">Collez votre texte. Postibou prépare vos publications Facebook et Instagram.</p></div>
+          <div class="atelier-intro-actions"><a class="button primary" href="#connexion" data-auth="signup">Essayer gratuitement</a><p class="fine">7 jours · 10 adaptations · Sans carte bancaire</p></div>
+        </div>
+        <div class="hero-art atelier-demo" aria-label="Exemple de réécriture avec Sublimer mon texte">
+          <div class="atelier-demo-head"><h2>Un texte, deux publications prêtes à partager.</h2></div>
+          <div class="atelier-flow">
+            <div class="atelier-source">
+              <div class="sample-note"><span class="eyebrow">01 · Votre texte</span><p>On a terminé la terrasse en bois. Merci aux clients pour leur confiance.</p></div>
+              <button class="button primary atelier-magic-trigger" type="button" aria-label="Revoir la transformation du texte d’exemple">✨ Sublimer mon texte</button>
+              <span class="atelier-example-note">Exemple préparé · Aucun crédit utilisé</span>
+              <svg class="atelier-connector" viewBox="0 0 36 44" aria-hidden="true"><path d="M3 22H30m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="3" cy="22" r="3" fill="currentColor"/></svg>
+            </div>
+            <div class="atelier-output">
+              <div class="atelier-tabs" role="tablist" aria-label="Publication de l’exemple" hidden>
+                <button id="demo-facebook-tab" type="button" role="tab" aria-selected="true" aria-controls="demo-facebook" data-demo-target="demo-facebook"><span class="network" aria-hidden="true">f</span>Facebook</button>
+                <button id="demo-instagram-tab" type="button" role="tab" aria-selected="false" aria-controls="demo-instagram" tabindex="-1" data-demo-target="demo-instagram"><span class="network instagram" aria-hidden="true">◎</span>Instagram</button>
+              </div>
+              <div class="atelier-results">
+                <article class="post" id="demo-facebook" aria-labelledby="demo-facebook-heading"><h3 class="post-heading" id="demo-facebook-heading"><span class="network" aria-hidden="true">f</span><span><span class="demo-step">02 · </span>Facebook</span></h3><p>Une terrasse terminée, et de nouvelles envies pour l’extérieur. 🌿</p><p>Nous venons de terminer cette terrasse en bois. Une réalisation que nous sommes heureux de partager ici, accompagnée d’un grand merci à nos clients pour leur confiance.</p><p>Une terrasse peut faire naître bien des idées : un coin pour prendre son café, une table autour de laquelle se retrouver, ou simplement un endroit où faire une pause. À chacun d’imaginer ce qu’il aimerait y vivre.</p><p>Aujourd’hui, nous vous présentons le résultat de ce chantier. Et vous, quelle place donneriez-vous à une terrasse dans votre extérieur ? Partagez vos idées en commentaire.</p></article>
+                <article class="post" id="demo-instagram" aria-labelledby="demo-instagram-heading"><h3 class="post-heading" id="demo-instagram-heading"><span class="network instagram" aria-hidden="true">◎</span><span><span class="demo-step">03 · </span>Instagram</span></h3><p>Une terrasse en bois. Et tout un extérieur à imaginer. 🌿</p><p>Cette réalisation est terminée : nous vous la partageons aujourd’hui, avec un grand merci à nos clients pour leur confiance.</p><p>Un café dehors, un repas à plusieurs, une pause au calme… À quoi ressemblerait votre moment idéal sur une terrasse ?</p><p>Dites-nous ce que vous aimeriez créer chez vous.</p><span class="hashtags">#TerrasseBois #AménagementExtérieur #Artisan #ProjetTerrasse</span></article>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="wrap"><div class="statement"><span><span class="check">✓</span>Pensé pour les artisans</span><span><span class="check">✓</span>Deux tons au choix</span><span><span class="check">✓</span>Prêt à copier</span></div></div>

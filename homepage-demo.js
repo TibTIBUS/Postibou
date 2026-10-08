@@ -1,9 +1,15 @@
 (() => {
   const preview = document.querySelector('.hero-art');
-  if (!preview || !('IntersectionObserver' in window)) return;
+  if (!preview) return;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const cards = [...preview.querySelectorAll('.post')];
-  if (!cards.length || reducedMotion.matches) return;
+  if (!cards.length) return;
+  const compact = window.matchMedia('(max-width: 900px)');
+  const tablist = preview.querySelector('.atelier-tabs');
+  const tabs = [...preview.querySelectorAll('[data-demo-target]')];
+  const magicTrigger = preview.querySelector('.atelier-magic-trigger');
+  const motionAvailable = 'IntersectionObserver' in window && typeof Element.prototype.animate === 'function';
+  let selected = cards[0].id;
   const snapshots = new Map();
   const running = new Map();
   const played = new Set();
@@ -22,13 +28,15 @@
     card.classList.remove('magic-preparing','magic-revealing');
     running.delete(card);
     replay.disabled = running.size > 0;
+    if (magicTrigger) magicTrigger.disabled = replay.disabled;
   };
   const animate = card => {
-    if (running.has(card) || reducedMotion.matches) return;
+    if (running.has(card) || reducedMotion.matches || card.hidden || !motionAvailable) return;
     played.add(card);
     const record = {animations: []};
     running.set(card,record);
     replay.disabled = true;
+    if (magicTrigger) magicTrigger.disabled = true;
     card.classList.add('magic-preparing');
     const indicator = document.createElement('span');
     indicator.className = 'magic-card-state';
@@ -80,28 +88,80 @@
   replay.className = 'magic-replay';
   replay.textContent = '↻ Revoir la magie';
   replay.setAttribute('aria-label','Revoir l’animation des exemples Facebook et Instagram');
-  const caption = preview.querySelector('.flow-caption');
-  caption.after(replay);
-  replay.addEventListener('click',() => {
-    if (reducedMotion.matches || running.size) return;
+  const caption = preview.querySelector('.atelier-demo-head');
+  if (caption) caption.append(replay);
+  else preview.querySelector('.flow-caption')?.after(replay);
+  const reveal = () => {
+    if (running.size) return;
+    if (reducedMotion.matches || !motionAvailable) {
+      cards.find(card => !card.hidden)?.focus({preventScroll: true});
+      return;
+    }
     cards.forEach(card => {
+      if (card.hidden) {played.delete(card);observer.unobserve(card);return;}
       const rect = card.getBoundingClientRect();
       if (rect.bottom > 0 && rect.top < window.innerHeight) animate(card);
       else {played.delete(card);observer.observe(card);}
     });
-  });
-  const observer = new IntersectionObserver(entries => {
+  };
+  replay.addEventListener('click',reveal);
+  magicTrigger?.addEventListener('click',reveal);
+  const observer = motionAvailable ? new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting || played.has(entry.target)) return;
       observer.unobserve(entry.target);
       animate(entry.target);
     });
-  },{threshold:.18});
-  cards.forEach(card => observer.observe(card));
-  reducedMotion.addEventListener('change',() => {
-    if (!reducedMotion.matches) return;
-    observer.disconnect();
-    [...running.keys()].forEach(restore);
-    replay.hidden = true;
+  },{threshold:.18}) : null;
+  const observeVisible = () => {
+    if (reducedMotion.matches || !observer) return;
+    cards.forEach(card => {if (!card.hidden && !played.has(card)) observer.observe(card);});
+  };
+  const showPlatforms = () => {
+    preview.dataset.compact = String(compact.matches);
+    if (tablist) tablist.hidden = !compact.matches;
+    tabs.forEach(tab => {
+      const active = tab.dataset.demoTarget === selected;
+      tab.setAttribute('aria-selected',String(active));
+      tab.tabIndex = active ? 0 : -1;
+    });
+    cards.forEach(card => {
+      card.hidden = compact.matches && card.id !== selected;
+      if (card.hidden) {observer?.unobserve(card);if (running.has(card)) restore(card);}
+      if (compact.matches) card.setAttribute('role','tabpanel');
+      else card.removeAttribute('role');
+      card.setAttribute('aria-labelledby',card.id + (compact.matches ? '-tab' : '-heading'));
+      card.tabIndex = compact.matches ? 0 : -1;
+    });
+    observeVisible();
+  };
+  const select = tab => {
+    selected = tab.dataset.demoTarget;
+    showPlatforms();
+  };
+  tabs.forEach((tab,index) => {
+    tab.addEventListener('click',() => select(tab));
+    tab.addEventListener('keydown',event => {
+      let next;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      select(tabs[next]);
+      tabs[next].focus();
+    });
   });
+  const updateMotion = () => {
+    replay.hidden = reducedMotion.matches || !motionAvailable;
+    if (replay.hidden) {
+      observer?.disconnect();
+      [...running.keys()].forEach(restore);
+    } else observeVisible();
+  };
+  compact.addEventListener('change',showPlatforms);
+  reducedMotion.addEventListener('change',updateMotion);
+  showPlatforms();
+  updateMotion();
 })();
