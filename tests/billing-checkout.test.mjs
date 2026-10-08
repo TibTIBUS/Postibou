@@ -193,13 +193,13 @@ test('missing, stale or malformed terms acceptance cannot create a payment', asy
 });
 
 test('exact terms and price proof is saved once before Stripe and survives retries', async () => {
-  const {TERMS_SHA256,TERMS_DOCUMENT} = await import('../netlify/functions/legal-policy.mjs');
+  const {TERMS_SHA256,TERMS_DOCUMENT,TERMS_VERSION} = await import('../netlify/functions/legal-policy.mjs');
   const f=fixture();
   const create=f.stripe.checkout.sessions.create;
   f.stripe.checkout.sessions.create=async (...args)=>{
     const rows=(await database.db.query('SELECT * FROM postibou_legal_acceptances')).rows;
     assert.equal(rows.length,1);assert.equal(rows[0].user_id,userId);
-    assert.equal(rows[0].terms_version,'2026-10-08');assert.equal(rows[0].terms_sha256,TERMS_SHA256);
+    assert.equal(rows[0].terms_version,TERMS_VERSION);assert.equal(rows[0].terms_sha256,TERMS_SHA256);
     assert.equal(rows[0].terms_document,TERMS_DOCUMENT);
     assert.equal(rows[0].price_id,args[0].line_items[0].price);
     return create(...args);

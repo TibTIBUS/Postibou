@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCheckoutHandler } from '../netlify/functions/billing-checkout.mjs';
 import { createPortalHandler } from '../netlify/functions/billing-portal.mjs';
+import { TERMS_VERSION } from '../netlify/functions/legal-policy.mjs';
 
 const origin = 'https://postibou.netlify.app';
 const user = { id: '11111111-1111-4111-8111-111111111111', email: 'artisan@example.fr' };
 const auth = async () => Response.json({ session: { id: 's1' }, user: { ...user, emailVerified: true } });
 
 function request(path, headers = {}) {
-  return new Request(origin + path, { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({acceptedTerms:true,termsVersion:'2026-10-08'}) });
+  return new Request(origin + path, { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({acceptedTerms:true,termsVersion:TERMS_VERSION}) });
 }
 
 function database(account) {
