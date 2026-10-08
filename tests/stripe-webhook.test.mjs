@@ -35,10 +35,10 @@ test('verifies paid checkout, schedules the 2027 price change, and records entit
     const query = strings.join('?'); queries.push({ query, values });
     if (query.includes('INSERT INTO public.postibou_stripe_events')) return [{ event_id: event.id }];
     if (query.includes('FROM public.postibou_entitlements WHERE user_id')) return [{ user_id: userId }];
-    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId}];
+    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId, stripe_subscription_id:'sub_123'}];
     return [];
   };
-  const handler = createStripeWebhookHandler({ getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'whsec_test' });
+  const handler = createStripeWebhookHandler({confirmPurchase:async()=>{}, getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'whsec_test' });
   const response = await handler(request());
   assert.equal(response.status, 200);
   assert.equal(calls[0][0], 'schedule-create');
@@ -62,14 +62,14 @@ test('a delayed paid-checkout event does not recreate future phases after schedu
     const query = strings.join('?'); queries.push({query, values});
     if (query.includes('INSERT INTO public.postibou_stripe_events')) return [{ event_id: event.id }];
     if (query.includes('SELECT user_id')) return [{ user_id: userId }];
-    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId}];
+    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId, stripe_subscription_id:'sub_123'}];
     return [];
   };
   const stripe = {
     webhooks: { constructEvent: () => event }, subscriptions: { retrieve: async () => subscription },
     subscriptionSchedules: { retrieve: async () => { scheduled = true; throw new Error('must not schedule'); } }
   };
-  const response = await createStripeWebhookHandler({ getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'test' })(request());
+  const response = await createStripeWebhookHandler({confirmPurchase:async()=>{}, getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'test' })(request());
   assert.equal(response.status, 200);
   assert.equal(scheduled, false);
   const persisted = queries.find(({query}) => query.includes("SET plan = 'monthly'"));
@@ -83,16 +83,16 @@ test('an out-of-order subscription update persists the current cancellation inst
   const sql = async (strings, ...values) => {
     const query = strings.join('?');
     if (query.includes('INSERT INTO')) return [{event_id: staleEvent.id}];
-    if (query.includes('SELECT user_id')) return [{user_id: userId}];
+    if (query.includes('SELECT user_id')) return [{user_id: userId, stripe_subscription_id:'sub_123'}];
     if (query.includes("SET plan = 'monthly'")) saved = values;
-    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId}];
+    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId, stripe_subscription_id:'sub_123'}];
     return [];
   };
   const stripe = { webhooks: { constructEvent: () => staleEvent }, subscriptions: { retrieve: async id => {
     retrieved = true; assert.equal(id, 'sub_123');
     return { id, customer: 'cus_123', status: 'active', cancel_at: 1794052800, items: { data: [{ current_period_start: 1791374400, current_period_end: 1794052800 }] } };
   } } };
-  assert.equal((await createStripeWebhookHandler({ getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'test' })(request())).status, 200);
+  assert.equal((await createStripeWebhookHandler({confirmPurchase:async()=>{}, getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'test' })(request())).status, 200);
   assert.equal(retrieved, true);
   assert.equal(saved[7], true);
 });
@@ -102,7 +102,7 @@ test('missing or forged Stripe signature is rejected before database access', as
   const Stripe = (await import('stripe')).default;
   const stripe = new Stripe('sk_test_synthetic_only');
   let databaseCalled = false;
-  const handler = createStripeWebhookHandler({getStripe:()=>stripe,getWebhookSecret:()=> 'whsec_synthetic_only',getDatabase:()=>{databaseCalled=true;throw new Error('unexpected')}});
+  const handler = createStripeWebhookHandler({confirmPurchase:async()=>{},getStripe:()=>stripe,getWebhookSecret:()=> 'whsec_synthetic_only',getDatabase:()=>{databaseCalled=true;throw new Error('unexpected')}});
   for(const signature of [null,'t=0,v1=invalid']) {
     const headers={'Content-Type':'application/json'};if(signature)headers['Stripe-Signature']=signature;
     const response=await handler(new Request('https://postibou.netlify.app/api/stripe/webhook',{method:'POST',headers,body:JSON.stringify(event)}));

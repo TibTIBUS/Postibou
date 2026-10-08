@@ -25,4 +25,9 @@ WHERE accepted_at < now() - interval '90 days'
 UNION ALL
 SELECT 'withdrawals_to_review', count(*)
 FROM public.postibou_withdrawal_requests
-WHERE status='received';
+WHERE status='received'
+UNION ALL
+SELECT 'confirmation_delivery_to_review', count(*)
+FROM public.postibou_contract_confirmations
+WHERE email_status='needs_review'
+  OR (email_status IN ('pending','sending') AND created_at < now() - interval '1 day');

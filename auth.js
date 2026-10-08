@@ -68,7 +68,7 @@ async function authRequest(action, body) {
 }
 function renderSession(user) {
   state.user = user;
-  if (!user) { state.credits = 10; state.plan = 'trial'; state.quota = 10; state.usage = null; state.quotaReady = false; state.quotaError = false; }
+  if (!user) { $('#account-confirmations').hidden = true; $('#confirmation-list').replaceChildren(); state.credits = 10; state.plan = 'trial'; state.quota = 10; state.usage = null; state.quotaReady = false; state.quotaError = false; }
   const nav = $('.nav-actions .login-link');
   nav.textContent = user ? 'Mon compte' : 'Se connecter';
   nav.href = user ? '#compte' : '#connexion';
@@ -98,6 +98,7 @@ async function refreshSession(guard = false) {
         window.setPostibouUsage?.(usage);
       } catch { state.credits = 0; state.quotaReady = false; state.quotaError = true; }
       updateQuota();
+      if (state.route === 'compte') refreshContractConfirmations();
     } else updateQuota();
     if (guard && !result.user && state.route === 'compte') {
       history.replaceState(null, '', '#connexion');
@@ -211,3 +212,43 @@ refreshSession().finally(() => {
   } else navigate(location.hash.slice(1));
 });
 
+
+let confirmationCheck = 0;
+async function refreshContractConfirmations() {
+  const requestId = ++confirmationCheck;
+  const userId = state.user?.id;
+  if (!userId || state.route !== 'compte') return;
+  const panel = $('#account-confirmations');
+  const list = $('#confirmation-list');
+  const message = $('#confirmation-message');
+  try {
+    const response = await fetch('/api/billing/confirmations', {credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
+    const data = await response.json();
+    if (requestId !== confirmationCheck || state.user?.id !== userId || state.route !== 'compte') return;
+    if (!response.ok) throw new Error('Confirmation unavailable');
+    list.replaceChildren();
+    const rows = Array.isArray(data.confirmations) ? data.confirmations : [];
+    panel.hidden = !rows.length && !state.usage?.hasBilling;
+    message.textContent = rows.length ? '' : 'Votre confirmation apparaîtra ici après validation de la commande. Vous pouvez actualiser cette liste.';
+    for (const row of rows) {
+      if (!/^[0-9a-f-]{36}$/i.test(row.id)) continue;
+      const line = document.createElement('p');
+      const link = document.createElement('a');
+      link.className = 'text-link';
+      link.href = '/api/billing/confirmations?receipt=' + encodeURIComponent(row.id);
+      link.download = 'postibou-confirmation-' + row.id + '.txt';
+      const date = new Intl.DateTimeFormat('fr-FR',{dateStyle:'long'}).format(new Date(row.paidAt));
+      link.textContent = 'Télécharger la confirmation du ' + date;
+      line.append(link);
+      const status = document.createElement('small');
+      status.style.display = 'block';
+      status.textContent = row.emailStatus === 'sent' ? 'E-mail confié au service d’envoi. Pensez à vérifier vos indésirables.' : 'Copie disponible ici ; envoi de l’e-mail en attente.';
+      line.append(status); list.append(line);
+    }
+  } catch {
+    if (requestId !== confirmationCheck || state.user?.id !== userId || state.route !== 'compte') return;
+    panel.hidden = !state.usage?.hasBilling;
+    message.textContent = 'Impossible de charger vos confirmations. Réessayez dans quelques instants.';
+  }
+}
+$('#refresh-confirmations').addEventListener('click', refreshContractConfirmations);

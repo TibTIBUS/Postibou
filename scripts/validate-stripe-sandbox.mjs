@@ -36,7 +36,8 @@ const deps={fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,pri
 const {randomBytes} = await import('node:crypto');
 // Sign a local replay of a genuine sandbox event; this is not Stripe network delivery.
 const secret = 'whsec_' + randomBytes(32).toString('hex');
-const webhook=createStripeWebhookHandler({...deps,getWebhookSecret:()=>secret});
+// Billing-only replay; durable confirmation and mail are covered in contract-confirmations.test.mjs.
+const webhook=createStripeWebhookHandler({...deps,confirmPurchase:async()=>{},getWebhookSecret:()=>secret});
 const usage=createUsageHandler(deps);
 const payload=JSON.stringify(event);
 const webhookRequest=()=>new Request(origin+'/api/stripe/webhook',{method:'POST',headers:{'stripe-signature':stripe.webhooks.generateTestHeaderString({payload,secret})},body:payload});
