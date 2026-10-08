@@ -22,7 +22,7 @@ function database(account) {
 test('blocks a second active subscription and cross-origin checkout', async () => {
   let stripeCalled = false;
   const deps = {
-    paidLaunchReady: true,
+    paidLaunchReady: true, mailReady: () => true,
     fetchAuth: auth,
     getDatabase: () => database({ stripe_customer_id: 'cus_existing', stripe_subscription_status: 'active', subscription_period_end: new Date(Date.now() + 86400000).toISOString() }),
     getStripe: () => { stripeCalled = true; return {}; }

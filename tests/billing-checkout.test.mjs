@@ -33,7 +33,7 @@ function fixture(timestamp = Date.parse('2026-10-08T12:00:00Z')) {
       list: async params => ({ data: [...sessions.values()].filter(s => s.created >= params.created.gte && s.created <= params.created.lte).map(s=>structuredClone(s)), has_more: false })
     } }
   };
-  return { stripe, sessions, subscriptions, calls, handler: createCheckoutHandler({paidLaunchReady:true,fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,now:()=>clock}),
+  return { stripe, sessions, subscriptions, calls, handler: createCheckoutHandler({paidLaunchReady:true,mailReady:()=>true,fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,now:()=>clock}),
     forceConcurrentCreate() { gate = new Promise(resolve => {releaseGate=resolve}); }, advance(ms) {clock+=ms;}, loseNextResponse(){loseResponse=true;}, forgetKeys(){keys.clear();},
     complete(status='active') { const session=[...sessions.values()][0];session.status='complete';session.subscription='sub_new';subscriptions.set('sub_new',{id:'sub_new',status,customer:session.customer}); }
   };
@@ -155,7 +155,7 @@ test('concurrent paid webhooks cannot replace each other even when both initiall
     return rows;
   };
   const stripe=webhookStripe({sub_a:subscription('sub_a'),sub_b:subscription('sub_b')});
-  const handler=createStripeWebhookHandler({getDatabase:()=>sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
+  const handler=createStripeWebhookHandler({confirmPurchase:async()=>{},getDatabase:()=>sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
   const results=await Promise.all([handler(webhookRequest('evt_a','sub_a')),handler(webhookRequest('evt_b','sub_b'))]);
   assert.deepEqual(results.map(r=>r.status).sort(),[200,500]);
   const row=(await database.db.query('SELECT stripe_subscription_id FROM postibou_entitlements')).rows[0];
@@ -168,7 +168,7 @@ test('concurrent paid webhooks cannot replace each other even when both initiall
 test('paid checkout can replace a confirmed terminal subscription, while its old events cannot overwrite the new one', async () => {
   await database.db.query("INSERT INTO postibou_entitlements(user_id,stripe_customer_id,stripe_subscription_id,stripe_subscription_status) VALUES ($1,'cus_same','sub_old','canceled')",[userId]);
   const stripe=webhookStripe({sub_old:subscription('sub_old','canceled'),sub_new:subscription('sub_new')});
-  const handler=createStripeWebhookHandler({getDatabase:()=>database.sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
+  const handler=createStripeWebhookHandler({confirmPurchase:async()=>{},getDatabase:()=>database.sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
   assert.equal((await handler(webhookRequest('evt_new','sub_new'))).status,200);
   assert.equal((await handler(webhookRequest('evt_old','sub_old'))).status,500);
   assert.equal((await database.db.query('SELECT stripe_subscription_id FROM postibou_entitlements')).rows[0].stripe_subscription_id,'sub_new');
@@ -217,6 +217,6 @@ test('failure to save terms proof prevents Stripe session creation', async () =>
     if(strings.join('?').includes('INSERT INTO public.postibou_legal_acceptances')) throw new Error('database unavailable');
     return database.sql(strings,...values);
   };
-  const handler=createCheckoutHandler({paidLaunchReady:true,fetchAuth:auth,getDatabase:()=>sql,getStripe:()=>f.stripe});
+  const handler=createCheckoutHandler({paidLaunchReady:true,mailReady:()=>true,fetchAuth:auth,getDatabase:()=>sql,getStripe:()=>f.stripe});
   assert.equal((await handler(request())).status,503);assert.equal(f.calls.length,0);
 });

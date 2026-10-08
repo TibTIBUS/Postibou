@@ -2,6 +2,7 @@ import { PAID_LAUNCH_READY, TERMS_VERSION, TERMS_SHA256, TERMS_DOCUMENT } from '
 import { createDatabase, createStripeClient, getVerifiedUser, validPostibouRequest } from './stripe-client.mjs';
 import { SITE_ORIGIN } from './auth.mjs';
 import { randomUUID } from 'node:crypto';
+import { isConfirmationMailReady } from './lib/contract-confirmation.mjs';
 
 export const config = { path: '/api/billing/checkout', method: 'POST' };
 const headers = { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' };
@@ -75,7 +76,7 @@ async function recoverSession(stripe, attempt, userId) {
   throw new Error('CHECKOUT_RECONCILIATION_INCOMPLETE');
 }
 
-export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createDatabase, getStripe = createStripeClient, now = () => Date.now(), paidLaunchReady = PAID_LAUNCH_READY, prices = { launch: priceLaunch, standard: priceStandard } } = {}) {
+export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createDatabase, getStripe = createStripeClient, now = () => Date.now(), paidLaunchReady = PAID_LAUNCH_READY, mailReady = isConfirmationMailReady, prices = { launch: priceLaunch, standard: priceStandard } } = {}) {
   return async request => {
     if (!validPostibouRequest(request, 'POST')) return reply({ code: 'FORBIDDEN' }, 403);
     if (!(request.headers.get('content-type') || '').toLowerCase().startsWith('application/json')) return reply({ code: 'INVALID_INPUT' }, 415);
@@ -90,6 +91,7 @@ export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createD
       if (consent?.acceptedTerms !== true || consent?.termsVersion !== TERMS_VERSION) {
         return reply({ code: 'TERMS_ACCEPTANCE_REQUIRED' }, 400);
       }
+      if (!mailReady()) return reply({ code: 'CONFIRMATION_EMAIL_UNAVAILABLE' }, 503);
 
       const sql = await getDatabase();
       await sql`

@@ -1,4 +1,5 @@
 import { createDatabase, createStripeClient } from './stripe-client.mjs';
+import { confirmContractPurchase } from './lib/contract-confirmation.mjs';
 
 export const config = { path: '/api/stripe/webhook', method: 'POST' };
 const headers = { 'Cache-Control': 'no-store', 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' };
@@ -91,7 +92,7 @@ async function persistSubscription(sql, userId, subscription, previousSubscripti
   `;
 }
 
-export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET'), prices = { launch: launchPrice, standard: standardPrice } } = {}) {
+export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET'), confirmPurchase = confirmContractPurchase, prices = { launch: launchPrice, standard: standardPrice } } = {}) {
   return async request => {
     if (request.method !== 'POST') return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
     const signature = request.headers.get('stripe-signature');
@@ -136,16 +137,21 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
             const previous = await stripe.subscriptions.retrieve(previousId);
             if (!['canceled', 'incomplete_expired'].includes(previous.status)) throw new Error('SUBSCRIPTION_CONFLICT');
           }
+          // Provide the accepted contract before granting paid service access.
+          // If mail is unavailable, Stripe retries this event; no paid quota is activated.
+          await confirmPurchase(sql, stripe, object, subscription);
           // Claim the mapping atomically before scheduling; two different completed
           // sessions must never silently replace one another's active subscription.
           const saved = await persistSubscription(sql, userId, subscription, previousId || null);
           if (!saved.length) throw new Error('SUBSCRIPTION_CONFLICT');
           await scheduleLaunchPriceChange(stripe, subscription, prices);
         }
+      // Lifecycle events may precede Checkout: they can refresh an already
+      // confirmed subscription, never activate a new one through an old customer.
       } else if (['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
         const customer = customerId(object?.customer);
-        const rows = customer ? await sql`SELECT user_id FROM public.postibou_entitlements WHERE stripe_customer_id = ${customer}` : [];
-        if (rows[0]?.user_id) {
+        const rows = customer ? await sql`SELECT user_id, stripe_subscription_id FROM public.postibou_entitlements WHERE stripe_customer_id = ${customer}` : [];
+        if (rows[0]?.user_id && rows[0].stripe_subscription_id === object.id) {
           // Stripe can deliver events out of order. Persist today's state so an older
           // update cannot undo a cancellation already confirmed by the customer.
           const subscription = event.type === 'customer.subscription.deleted'
@@ -155,8 +161,8 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
       } else if (['invoice.paid', 'invoice.payment_failed'].includes(event.type)) {
         const customer = customerId(object?.customer);
         const subId = subscriptionId(object?.subscription || object?.parent?.subscription_details?.subscription);
-        const rows = customer ? await sql`SELECT user_id FROM public.postibou_entitlements WHERE stripe_customer_id = ${customer}` : [];
-        if (rows[0]?.user_id && subId) {
+        const rows = customer ? await sql`SELECT user_id, stripe_subscription_id FROM public.postibou_entitlements WHERE stripe_customer_id = ${customer}` : [];
+        if (rows[0]?.user_id && subId && rows[0].stripe_subscription_id === subId) {
           const subscription = await stripe.subscriptions.retrieve(subId);
           await persistSubscription(sql, rows[0].user_id, subscription);
         }
