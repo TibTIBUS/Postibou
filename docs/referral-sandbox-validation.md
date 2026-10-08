@@ -12,7 +12,7 @@ Compte isolé : `acct_1UOADR9BDDs3b0Qj`, livemode=false. Aucune clé stockée da
 
 ## À vérifier
 
-Le second renouvellement à zéro, le troisième renouvellement au tarif courant du scénario, le comportement du calendrier 2027, l'annulation et les remboursements restent à vérifier. Les tests automatisés avec Stripe simulé couvrent ces cas, mais la validation avec de vrais objets Stripe sandbox n'est pas complète. Les abonnements fictifs de ce scénario ont été créés directement à 7,90 € sans calendrier 2027 ; ils ne permettent donc pas de confirmer seuls le changement de prix automatique du parcours Checkout.
+Les deux renouvellements à zéro et le troisième renouvellement payé à 9,90 € sont désormais vérifiés dans ce scénario. Le comportement du calendrier automatique 2027, l'annulation, les remboursements et le parcours complet site/webhooks/base restent à vérifier avec de vrais objets Stripe sandbox. Les tests automatisés avec Stripe simulé couvrent ces cas complémentaires. Les abonnements fictifs de ce scénario ont été créés directement à 7,90 € sans calendrier 2027, puis celui du parrain a été préparé manuellement au prix de 9,90 € ; ils ne permettent donc pas de confirmer seuls le changement de prix automatique du parcours Checkout.
 
 Le connecteur disponible expose la création d'horloges, sans opération d'avance trouvée dans son catalogue. Le navigateur Codex demande une connexion Stripe. L'agent Chrome connecté peut effectuer uniquement l'avance suivante.
 
@@ -63,3 +63,11 @@ L'horloge doit être au 8 décembre 2026 à 07:00 UTC. Avance au **8 janvier 202
 Rapporte pour le parrain `cus_VP6hpwA8cEnC4p`, abonnement `sub_1UOIUW9BDDs3b0QjyHdMWBDE`, l'identifiant de la facture de janvier, son statut, le total, le montant payé, le montant restant et les remises affichées. Montant attendu : 9,90 €, sans coupon de parrainage. Si elle n'est pas encore payée, n'avance pas davantage et rapporte son état exact. Ne paie et ne finalise rien manuellement. Aucun autre abonnement ou réglage à modifier.
 
 Codex exécutera ensuite le script avec les arguments fixture, facture de janvier et `exhausted`. Ce mode interdit une nouvelle remise et vérifie le paiement de 990 centimes, les deux mois consommés et l'absence de remise sur la nouvelle facture.
+
+## Reprise de facturation confirmée
+
+L'agent Chrome a avancé l'horloge au 8 janvier 2027 à 08:00 UTC. La facture `in_1UOJAm9BDDs3b0Qj88R7TEqW`, période du 8 janvier au 8 février, est payée à 990 centimes sans remise et sans métadonnée de consommation de parrainage. Le solde restant (`amount_remaining`) est zéro ; `amount_due` conserve le montant initial de 990 centimes même après paiement et ne désigne pas le solde.
+
+Le contrôle `exhausted` a été exécuté sur cette facture avec le journal des deux mois utilisés : zéro écriture Stripe, zéro remise supplémentaire, deux mois utilisés, zéro disponible et zéro réservé. Le scénario de cumul puis épuisement des deux mois offerts est validé avec de vrais objets Stripe sandbox et une base d'application locale isolée.
+
+Limites : ce scénario ne valide pas la livraison des webhooks au site Netlify, les écritures dans Neon production, les quotas et e-mails réels après souscription, ni le calendrier automatique de prix 2027 (prix sandbox préparé manuellement). La souscription payante reste fermée jusqu'aux vérifications du parcours complet.
