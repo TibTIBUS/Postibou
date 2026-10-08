@@ -36,3 +36,13 @@ Exécuter `node scripts/validate-stripe-sandbox.mjs` avec ces variables configur
 ## Suite prévue
 
 Terminer les tests avec horloge Stripe dans un sandbox rattaché. Ensuite examiner les mentions légales, les conditions d'abonnement et la confidentialité à partir des sources officielles françaises et des renseignements réels de l'éditeur. La page actuelle « Informations et confidentialité » est une page de préversion ; elle ne remplace pas les documents définitifs.
+
+## Reprise avec horloge — préparation vérifiée, renouvellements en attente
+
+Le sandbox est désormais réclamé. L’autorisation CLI reçue est limitée au compte `acct_1UOADR9BDDs3b0Qj`, mode test. La lecture API confirme le client `cus_VP00dp0JNmXu2x`, `livemode=false`, rattaché à l’horloge `clock_1UOC0B9BDDs3b0QjJNJOyXWH`, état ready. L’API indique un temps gelé de 1791442804 (8 octobre 2026 à 07:00:04 UTC).
+
+La fonction Checkout réelle, avec prix de test et PostgreSQL en mémoire, a créé `cs_test_a1w0FIq6UGS9bKQkVreQRc7itYRksieztoDr4bKz4JE6Sm1iFrKzLKqflE`. Le formulaire affiche Sandbox et 7,90 €/mois, avec carte fictive 4242. La soumission par l’agent a été refusée par le contrôle automatique du navigateur, qui exige la validation finale par l’utilisateur même en sandbox. Aucun paiement n’est déclaré réussi et l’horloge n’a pas été avancée par cette reprise.
+
+Deux scripts manuels sont préparés : `validate-stripe-clock.mjs` crée le Checkout et refuse les doublons ; `validate-stripe-renewals.mjs` attend le paiement terminé, puis prévoit les renouvellements novembre/décembre à 790 centimes, janvier/février à 990 centimes, les trente crédits renouvelés et la fin d’accès après résiliation. Le second script n’a pas encore été exécuté et ne constitue donc aucune preuve de réussite. Il utilise des événements Stripe authentiques rejoués avec une signature locale, pas une livraison réseau en production.
+
+Variables privées : POSTIBOU_CLOCK_CREDENTIALS (fichier d’autorisation CLI, projet postibou-test), POSTIBOU_CLOCK_FIXTURES (créé par le premier script, URL comprise), POSTIBOU_CLOCK_REPORT (rapport final du second). Aucun de ces fichiers ne doit être publié. Exécution Node avec proxy de l’environnement si requis. Ne pas relancer la création pour la session déjà préparée.
