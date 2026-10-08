@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Conditions d’utilisation et de vente — Postibou</title><style>body{font:17px/1.7 system-ui,sans-serif;background:#fffaf4;color:#16263a;margin:0}main{max-width:850px;margin:40px auto;padding:24px}a{color:#2256b3}h1,h2{line-height:1.25}nav{font-size:14px;margin-bottom:36px}textarea{width:100%;min-height:230px;box-sizing:border-box;padding:16px;font:inherit}button{background:#2256b3;color:white;border:0;border-radius:8px;padding:12px 18px;font:inherit;cursor:pointer}@media print{nav,button{display:none}}</style></head><body><main><nav><a href="/">Accueil</a> · <a href="/mentions-legales.html">Mentions légales</a> · <a href="/conditions.html">Conditions</a> · <a href="/confidentialite.html">Confidentialité</a> · <a href="/retractation.html">Rétractation</a></nav><h1>Conditions d’utilisation et de vente</h1><p>Version du 8 octobre 2026 — v2. L’essai gratuit est ouvert ; la souscription payante est temporairement fermée.</p><p><a download href="/conditions-2026-10-08-v2.txt">Télécharger les conditions</a> · <button onclick="window.print()">Imprimer</button></p><div style="white-space:pre-wrap">Conditions d’utilisation et de vente de Postibou
+Conditions d’utilisation et de vente de Postibou
 Version 2026-10-08-v2 — 8 octobre 2026
 
 IMPORTANT : l’essai gratuit est ouvert. La souscription payante est temporairement fermée. Les dispositions concernant le paiement s’appliqueront à l’ouverture de l’offre ; leur lecture ne constitue pas une commande. Le médiateur de la consommation sera indiqué avant cette ouverture.
@@ -48,12 +48,12 @@ Date :
 Signature, uniquement si le formulaire est envoyé sur papier :
 
 9. Garanties légales du service numérique — information encadrée
-<section aria-label="Garanties légales du service numérique" style="border:2px solid #2256b3;border-radius:12px;padding:20px;margin:24px 0">
+[DÉBUT DE L’ENCADRÉ]
 Pour le consommateur, la garantie légale de conformité couvre toute la durée de fourniture continue de Postibou : les sept jours d’essai lorsqu’elle s’y applique, puis toute la durée de l’abonnement, y compris les périodes mensuelles renouvelées. Pendant cette durée, il suffit d’établir le défaut ; il n’est pas nécessaire de prouver quand il est apparu. Les mises à jour permettant de maintenir la conformité sont dues pendant cette même durée.
 Un défaut ouvre droit à une remise en conformité sans frais, sans retard injustifié et sans inconvénient majeur. Le consommateur peut garder le service avec une réduction du prix ou mettre fin au contrat avec remboursement contre renoncement au service si l’éditeur refuse cette remise en conformité, la retarde injustement, exige des frais, impose un inconvénient majeur, ou si le défaut subsiste après sa tentative de correction. Un défaut suffisamment grave permet de demander immédiatement la réduction du prix ou la résolution, sans demander d’abord une correction. Un défaut mineur ne permet la résolution que pour un contrat sans prix.
 Une indisponibilité pendant une remise en conformité suspend le délai de garantie jusqu’au retour d’un service conforme. Ces droits découlent des articles L. 224-25-1 à L. 224-25-31 du code de la consommation. Faire obstacle de mauvaise foi à cette garantie expose le professionnel à une amende civile pouvant atteindre 300 000 € ou 10 % de son chiffre d’affaires annuel moyen.
 La garantie des vices cachés, prévue aux articles 1641 à 1649 du code civil, peut également être exercée dans les deux ans suivant la découverte du défaut ; elle permet de conserver le service avec une réduction du prix ou d’y renoncer avec remboursement intégral.
-</section>
+[FIN DE L’ENCADRÉ]
 Pour demander l’application d’une garantie, contactez l’éditeur aux coordonnées de l’article 1. Les clauses relatives à l’IA ne vous privent d’aucun de ces recours.
 
 10. Textes, droits et usages
@@ -67,4 +67,3 @@ Le droit français s’applique, sans retirer les protections impératives dont 
 
 12. Versions et preuve
 Cette version est téléchargeable et imprimable. La version acceptée, son contenu, son empreinte, la date d’acceptation et la référence du tarif sont conservés pour établir l’accord. Les versions antérieures restent archivées ; une mise à jour n’écrase pas la version acceptée. Une copie peut être demandée à l’éditeur. Ces dispositions ne remplacent pas la confirmation de la commande sur support durable.
-</div></main></body></html>
