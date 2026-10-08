@@ -1,0 +1,22 @@
+{
+  "livemode": false,
+  "account": "acct_1UOADR9BDDs3b0Qj",
+  "paidAt": 1791442800,
+  "clock": "clock_1UOIUK9BDDs3b0Qjj8ykRgpn",
+  "sponsor": {
+    "customer": "cus_VP6hpwA8cEnC4p",
+    "subscription": "sub_1UOIUW9BDDs3b0QjyHdMWBDE"
+  },
+  "referees": [
+    {
+      "customer": "cus_VP6hKWZxAeZde7",
+      "subscription": "sub_1UOIUa9BDDs3b0Qjs8HoRXZ1",
+      "invoice": "in_1UOIUa9BDDs3b0Qj52dfEhvu"
+    },
+    {
+      "customer": "cus_VP6iriASZ5sEwd",
+      "subscription": "sub_1UOIUf9BDDs3b0QjM3s45aBG",
+      "invoice": "in_1UOIUf9BDDs3b0QjcqewkTQV"
+    }
+  ]
+}
