@@ -33,7 +33,7 @@ function fixture(timestamp = Date.parse('2026-10-08T12:00:00Z')) {
       list: async params => ({ data: [...sessions.values()].filter(s => s.created >= params.created.gte && s.created <= params.created.lte).map(s=>structuredClone(s)), has_more: false })
     } }
   };
-  return { stripe, sessions, subscriptions, calls, handler: createCheckoutHandler({fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,now:()=>clock}),
+  return { stripe, sessions, subscriptions, calls, handler: createCheckoutHandler({paidLaunchReady:true,fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,now:()=>clock}),
     forceConcurrentCreate() { gate = new Promise(resolve => {releaseGate=resolve}); }, advance(ms) {clock+=ms;}, loseNextResponse(){loseResponse=true;}, forgetKeys(){keys.clear();},
     complete(status='active') { const session=[...sessions.values()][0];session.status='complete';session.subscription='sub_new';subscriptions.set('sub_new',{id:'sub_new',status,customer:session.customer}); }
   };
@@ -172,4 +172,51 @@ test('paid checkout can replace a confirmed terminal subscription, while its old
   assert.equal((await handler(webhookRequest('evt_new','sub_new'))).status,200);
   assert.equal((await handler(webhookRequest('evt_old','sub_old'))).status,500);
   assert.equal((await database.db.query('SELECT stripe_subscription_id FROM postibou_entitlements')).rows[0].stripe_subscription_id,'sub_new');
+});
+
+test('production default keeps paid checkout closed without touching billing data or Stripe', async () => {
+  let databaseCalled = false, stripeCalled = false;
+  const handler = createCheckoutHandler({fetchAuth:auth,getDatabase:()=>{databaseCalled=true;throw new Error('unexpected')},getStripe:()=>{stripeCalled=true;throw new Error('unexpected')}});
+  const response = await handler(request());
+  assert.equal(response.status,409);
+  assert.equal((await response.json()).code,'PAID_LAUNCH_PENDING');
+  assert.equal(databaseCalled,false);assert.equal(stripeCalled,false);
+});
+
+test('missing, stale or malformed terms acceptance cannot create a payment', async () => {
+  const f = fixture();
+  for (const body of ['{}','null','{',JSON.stringify({acceptedTerms:false,termsVersion:'2026-10-08'}),JSON.stringify({acceptedTerms:true,termsVersion:'old'})]) {
+    const req = new Request('https://postibou.netlify.app/api/billing/checkout',{method:'POST',headers:{Origin:'https://postibou.netlify.app','Content-Type':'application/json'},body});
+    assert.equal((await f.handler(req)).status,400);
+  }
+  assert.equal(f.calls.length,0);assert.equal(database.queries.length,0);
+});
+
+test('exact terms and price proof is saved once before Stripe and survives retries', async () => {
+  const {TERMS_SHA256,TERMS_DOCUMENT} = await import('../netlify/functions/legal-policy.mjs');
+  const f=fixture();
+  const create=f.stripe.checkout.sessions.create;
+  f.stripe.checkout.sessions.create=async (...args)=>{
+    const rows=(await database.db.query('SELECT * FROM postibou_legal_acceptances')).rows;
+    assert.equal(rows.length,1);assert.equal(rows[0].user_id,userId);
+    assert.equal(rows[0].terms_version,'2026-10-08');assert.equal(rows[0].terms_sha256,TERMS_SHA256);
+    assert.equal(rows[0].terms_document,TERMS_DOCUMENT);
+    assert.equal(rows[0].price_id,args[0].line_items[0].price);
+    return create(...args);
+  };
+  f.loseNextResponse();assert.equal((await f.handler(request())).status,503);
+  const first=(await database.db.query('SELECT accepted_at FROM postibou_legal_acceptances')).rows[0];
+  assert.equal((await f.handler(request())).status,200);
+  const rows=(await database.db.query('SELECT accepted_at FROM postibou_legal_acceptances')).rows;
+  assert.equal(rows.length,1);assert.deepEqual(rows[0],first);
+});
+
+test('failure to save terms proof prevents Stripe session creation', async () => {
+  const f=fixture();
+  const sql=async (strings,...values)=>{
+    if(strings.join('?').includes('INSERT INTO public.postibou_legal_acceptances')) throw new Error('database unavailable');
+    return database.sql(strings,...values);
+  };
+  const handler=createCheckoutHandler({paidLaunchReady:true,fetchAuth:auth,getDatabase:()=>sql,getStripe:()=>f.stripe});
+  assert.equal((await handler(request())).status,503);assert.equal(f.calls.length,0);
 });

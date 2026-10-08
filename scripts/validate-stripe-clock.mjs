@@ -17,7 +17,7 @@ const existing=await stripe.checkout.sessions.list({customer:customerId,limit:10
 assert.ok(!existing.data.some(s=>s.status==='open'||s.status==='complete'),'A clock Checkout already exists; use its URL');
 const database=await billingDatabase();
 await database.sql`INSERT INTO postibou_entitlements (user_id,stripe_customer_id) VALUES (${userId}::uuid,${customerId})`;
-const handler=createCheckoutHandler({fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,prices});
+const handler=createCheckoutHandler({paidLaunchReady:true,fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,prices});
 const response=await handler(request());const result=await response.json();assert.equal(response.status,200,JSON.stringify(result));
 await writeFile(process.env.POSTIBOU_CLOCK_FIXTURES,JSON.stringify({customer:customerId,clock:clockId,frozen:clock.frozen_time,prices,url:result.url}),{mode:0o600});
 console.log(JSON.stringify({check:'clock-checkout-created',...result,customer:customerId,clock:clockId,frozen:clock.frozen_time}));await database.db.close();

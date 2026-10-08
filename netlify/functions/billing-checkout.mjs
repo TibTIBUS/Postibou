@@ -1,3 +1,4 @@
+import { PAID_LAUNCH_READY, TERMS_VERSION, TERMS_SHA256, TERMS_DOCUMENT } from './legal-policy.mjs';
 import { createDatabase, createStripeClient, getVerifiedUser, validPostibouRequest } from './stripe-client.mjs';
 import { SITE_ORIGIN } from './auth.mjs';
 import { randomUUID } from 'node:crypto';
@@ -35,7 +36,7 @@ function parameters(attempt, userId) {
   // Every retry uses the snapshot persisted in Neon, including price, email and expiry.
   const suffix = attempt.attempt_id.replaceAll('-', '').slice(0, 8).split('').map(char => String.fromCharCode(97 + parseInt(char, 16))).join('');
   return {
-    mode: 'subscription', line_items: [{ price: attempt.price_id, quantity: 1 }],
+    mode: 'subscription', billing_address_collection: 'required', line_items: [{ price: attempt.price_id, quantity: 1 }],
     ...(attempt.customer_id ? { customer: attempt.customer_id } : { customer_email: attempt.customer_email }),
     client_reference_id: userId, metadata: { postibou_attempt_id: attempt.attempt_id },
     success_url: SITE_ORIGIN + '/?billing=success#compte', cancel_url: SITE_ORIGIN + '/#abonnement',
@@ -74,13 +75,22 @@ async function recoverSession(stripe, attempt, userId) {
   throw new Error('CHECKOUT_RECONCILIATION_INCOMPLETE');
 }
 
-export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createDatabase, getStripe = createStripeClient, now = () => Date.now(), prices = { launch: priceLaunch, standard: priceStandard } } = {}) {
+export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createDatabase, getStripe = createStripeClient, now = () => Date.now(), paidLaunchReady = PAID_LAUNCH_READY, prices = { launch: priceLaunch, standard: priceStandard } } = {}) {
   return async request => {
     if (!validPostibouRequest(request, 'POST')) return reply({ code: 'FORBIDDEN' }, 403);
     if (!(request.headers.get('content-type') || '').toLowerCase().startsWith('application/json')) return reply({ code: 'INVALID_INPUT' }, 415);
     try {
       const user = await getVerifiedUser(request, fetchAuth);
       if (!user) return reply({ code: 'UNAUTHORIZED' }, 401);
+      if (!paidLaunchReady) return reply({ code: 'PAID_LAUNCH_PENDING' }, 409);
+      const body = await request.text();
+      if (body.length > 2048) return reply({ code: 'INVALID_INPUT' }, 400);
+      let consent;
+      try { consent = JSON.parse(body); } catch { return reply({ code: 'INVALID_INPUT' }, 400); }
+      if (consent?.acceptedTerms !== true || consent?.termsVersion !== TERMS_VERSION) {
+        return reply({ code: 'TERMS_ACCEPTANCE_REQUIRED' }, 400);
+      }
+
       const sql = await getDatabase();
       await sql`
         INSERT INTO public.postibou_entitlements (user_id)
@@ -117,6 +127,21 @@ export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createD
             continue;
           }
         } else {
+          // Fail closed if the exact, immutable accepted document cannot be saved.
+          await sql`
+            INSERT INTO public.postibou_legal_acceptances
+              (attempt_id, user_id, terms_version, terms_sha256, terms_document, price_id)
+            VALUES (${attempt.attempt_id}::uuid, ${user.id}::uuid, ${TERMS_VERSION}, ${TERMS_SHA256}, ${TERMS_DOCUMENT}, ${attempt.price_id})
+            ON CONFLICT (attempt_id) DO NOTHING
+          `;
+          const saved = await sql`
+            SELECT user_id, terms_version, terms_sha256, price_id
+            FROM public.postibou_legal_acceptances WHERE attempt_id = ${attempt.attempt_id}::uuid
+          `;
+          if (saved[0]?.user_id !== user.id || saved[0]?.terms_version !== TERMS_VERSION
+            || saved[0]?.terms_sha256 !== TERMS_SHA256 || saved[0]?.price_id !== attempt.price_id) {
+            throw new Error('TERMS_PROOF_UNAVAILABLE');
+          }
           const created = await stripe.checkout.sessions.create(parameters(attempt, user.id), {
             idempotencyKey: 'postibou_checkout_v2_' + attempt.attempt_id
           });
