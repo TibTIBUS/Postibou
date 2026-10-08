@@ -54,7 +54,8 @@
     @media(max-width:950px){.hero{gap:28px}.editor-grid{grid-template-columns:1fr 1fr}.tone:has(input:checked){padding:12px}}
     @media(max-width:720px){.hero h1{font-size:clamp(2.3rem,8vw,3.1rem)}.editor-grid{grid-template-columns:1fr}.workspace-head{align-items:start}.workspace-actions{justify-content:start}.workspace-head h1{font-size:1.9rem}.brand-symbol{width:35px;height:35px;font-size:1.3rem}.tone:has(input:checked){padding:10px}.field-footer{flex-wrap:wrap}.mini-tag{max-width:115px;text-align:right}.hero-art{padding:20px}.button.small{min-height:44px}}
     @media(max-width:360px){.wrap{padding-inline:16px}.tones{grid-template-columns:1fr}.hero-actions{flex-direction:column}.hero-actions .button{width:100%}.post{padding:16px}.mini-tag{display:none}.account-row{align-items:start;flex-wrap:wrap}.account-row .muted{max-width:100%}.nav-actions .button{padding-inline:10px}.panel{padding:18px}.tone{padding:11px}.tone:has(input:checked){padding:10px}}
-  </style>
+      .generation-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.generation-actions .button{padding-inline:12px;font-size:.9375rem}.button.magic{background:var(--ink);color:#fff;border-color:var(--violet)}.button.magic:hover{background:#5328c9}.magic-description{font-size:.8125rem;line-height:1.6;color:var(--muted);margin:12px 0 0}.magic-description strong{color:var(--ink)}@media(max-width:950px){.generation-actions{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
   <header class="topbar"><div class="wrap nav">
@@ -81,7 +82,7 @@
     <section class="view wrap workspace" id="view-outil" aria-label="Outil de publication">
       <div class="workspace-head"><div><span class="eyebrow">À vous de briller</span><h1>Votre savoir-faire.<br>Les mots qui le font rayonner.</h1><p>Un texte. Deux publications. Prêtes à partager.</p></div><div class="workspace-actions"><span class="pill trial-pill">Essai gratuit · 7 jours</span><a class="button secondary small" href="#compte">Mon compte</a></div></div>
       <div class="demo-notice"><strong>Votre essai gratuit</strong><span>Connectez-vous pour générer vos propres textes : 10 adaptations en 7 jours. La démonstration reste accessible sans compte.</span></div>
-      <div class="editor-grid"><form class="panel" id="adapt-form"><div class="field-head"><label for="source-text">Votre texte</label><span id="character-count">0 / 5 000</span></div><textarea id="source-text" maxlength="5000" placeholder="Décrivez votre dernier chantier, une réalisation ou une actualité…" required></textarea><div class="field-footer"><button type="button" class="text-link" id="load-example">Reprendre l’exemple</button><small>Vos textes ne sont pas enregistrés dans votre compte. Ils sont transmis à OpenRouter et au fournisseur d’IA sélectionné. Évitez les données personnelles et confidentielles. <a class="text-link" href="#informations">En savoir plus</a></small></div><fieldset><legend>Quelle intention ?</legend><div class="tones"><label class="tone"><input type="radio" name="tone" value="warm" checked><span>Professionnel<small>Simple et chaleureux</small></span></label><label class="tone"><input type="radio" name="tone" value="commercial"><span>Plus commercial<small>Donner envie de vous contacter</small></span></label></div></fieldset><button class="button primary full" id="generate-button" type="submit">Adapter mon texte</button><p class="quota" id="quota-text">10 crédits de démonstration disponibles</p><p class="inline-error" id="adapt-error" role="alert"></p></form>
+      <div class="editor-grid"><form class="panel" id="adapt-form"><div class="field-head"><label for="source-text">Votre texte</label><span id="character-count">0 / 5 000</span></div><textarea id="source-text" maxlength="5000" placeholder="Décrivez votre dernier chantier, une réalisation ou une actualité…" required></textarea><div class="field-footer"><button type="button" class="text-link" id="load-example">Reprendre l’exemple</button><small>Vos textes ne sont pas enregistrés dans votre compte. Ils sont transmis à OpenRouter et au fournisseur d’IA sélectionné. Évitez les données personnelles et confidentielles. <a class="text-link" href="#informations">En savoir plus</a></small></div><fieldset><legend>Quelle intention ?</legend><div class="tones"><label class="tone"><input type="radio" name="tone" value="warm" checked><span>Professionnel<small>Simple et chaleureux</small></span></label><label class="tone"><input type="radio" name="tone" value="commercial"><span>Plus commercial<small>Donner envie de vous contacter</small></span></label></div></fieldset><div class="generation-actions"><button class="button secondary full" id="generate-button" type="submit">Adapter mon texte</button><button class="button magic full" id="magic-button" type="submit" aria-describedby="magic-description">✨ Sublimer mon texte</button></div><p class="magic-description" id="magic-description">Une accroche plus forte, un texte plus riche.<br>Facebook + Instagram · <strong>1 adaptation par clic</strong></p><p class="quota" id="quota-text">10 crédits de démonstration disponibles</p><p class="inline-error" id="adapt-error" role="alert"></p></form>
         <div class="result-stack" aria-live="polite" aria-busy="false" id="results"><article class="panel result-panel"><div class="result-head"><h2><span class="network" aria-hidden="true">f</span>Facebook</h2><button class="button secondary small" data-copy="facebook" disabled>Copier</button></div><p class="result-text" id="facebook-result"></p><p class="empty-result" id="facebook-empty">Votre publication Facebook apparaîtra ici.<br>Choisissez un ton, puis adaptez l’exemple.</p></article><article class="panel result-panel"><div class="result-head"><h2><span class="network instagram" aria-hidden="true">◎</span>Instagram</h2><button class="button secondary small" data-copy="instagram" disabled>Copier</button></div><p class="result-text" id="instagram-result"></p><p class="empty-result" id="instagram-empty">Votre publication Instagram apparaîtra ici.<br>Une accroche et des hashtags adaptés à ce réseau.</p></article><small class="muted" id="result-note" hidden>Exemple préparé pour la démonstration. Relisez toujours vos textes avant de les publier.</small></div>
       </div>
     </section>
@@ -111,6 +112,16 @@
         instagram: 'Votre prochaine terrasse commence par une idée. 🌿\n\nCette terrasse en bois est terminée. Merci à nos clients pour leur confiance !\n\nUn projet pour votre extérieur ? Parlons-en en message privé.\n\n#TerrasseBois #ProjetTerrasse #AménagementExtérieur #Artisan'
       }
     };
+    const DEMO_MAGIC_OUTPUTS = {
+      warm: {
+        facebook: 'Une terrasse terminée, et de nouvelles envies pour l’extérieur. 🌿\n\nNous venons de terminer cette terrasse en bois. Une réalisation que nous sommes heureux de partager ici, accompagnée d’un merci à nos clients pour leur confiance.\n\nUne terrasse peut devenir le point de départ de bien des idées : un coin pour prendre son café, une table autour de laquelle se retrouver, ou simplement un endroit où faire une pause. À chacun d’imaginer ce qu’il aimerait y vivre.\n\nAujourd’hui, nous vous présentons le résultat de ce chantier. Et vous, quelle place donneriez-vous à une terrasse dans votre extérieur ? Partagez vos idées en commentaire.',
+        instagram: 'Une terrasse en bois. Et tout un extérieur à imaginer. 🌿\n\nCette réalisation est terminée : nous vous la partageons aujourd’hui, avec un grand merci à nos clients pour leur confiance.\n\nUn café dehors, un repas à plusieurs, une pause au calme… À quoi ressemblerait votre moment idéal sur une terrasse ?\n\nDites-nous ce que vous aimeriez créer chez vous.\n\n#TerrasseBois #AménagementExtérieur #Artisan #ProjetTerrasse'
+      },
+      commercial: {
+        facebook: 'Et si votre prochain projet commençait par une terrasse en bois ? 🌿\n\nNous venons de terminer cette réalisation. Merci à nos clients de nous avoir fait confiance pour ce chantier.\n\nVous réfléchissez à votre extérieur ? Une terrasse peut offrir un espace pour se retrouver, profiter d’un repas dehors ou s’accorder une pause. Le point de départ, c’est votre idée : ce que vous avez envie de faire de cet espace.\n\nCette réalisation vous donne envie d’en parler ? Écrivez-nous avec votre projet et vos questions. Nous pourrons échanger sur ce que vous imaginez pour votre extérieur.',
+        instagram: 'Votre extérieur mérite une idée qui vous ressemble. 🌿\n\nCette terrasse en bois est terminée. Merci à nos clients pour leur confiance !\n\nUn endroit pour partager un repas ? Pour prendre votre café dehors ? Ou pour faire une pause ? À vous d’imaginer le projet qui correspond à vos envies.\n\nVous pensez à une terrasse ? Envoyez-nous un message pour en parler.\n\n#TerrasseBois #ProjetTerrasse #AménagementExtérieur #Artisan'
+      }
+    };
     const state = { credits: 10, plan: 'trial', quota: 10, usage: null, outputs: null, busy: false, quotaReady: false, quotaError: false, authMode: 'signup', route: 'accueil' };
     const $ = selector => document.querySelector(selector);
     const $$ = selector => [...document.querySelectorAll(selector)];
@@ -135,7 +146,9 @@
       else if (state.user) $('#quota-text').textContent = state.credits + ' adaptation' + (state.credits === 1 ? '' : 's') + ' restante' + (state.credits === 1 ? '' : 's') + ' sur votre ' + planName;
       else $('#quota-text').textContent = state.credits + ' crédits de démonstration disponibles';
       $('#generate-button').disabled = state.busy || state.credits === 0 || (state.user && !state.quotaReady);
-      $('#generate-button').textContent = state.user && state.quotaError ? 'Crédits indisponibles' : state.user && state.credits === 0 ? 'Crédits épuisés' : 'Adapter mon texte';
+      $('#magic-button').disabled = $('#generate-button').disabled;
+      $('#magic-button').textContent = state.busy && state.generationMode === 'magic' ? '✨ Réécriture en cours…' : '✨ Sublimer mon texte';
+      $('#generate-button').textContent = state.busy && state.generationMode === 'classic' ? 'Préparation des deux versions…' : state.user && state.quotaError ? 'Crédits indisponibles' : state.user && state.credits === 0 ? 'Crédits épuisés' : 'Adapter mon texte';
     }
     window.setPostibouUsage = usage => {
       state.usage = usage;
@@ -173,23 +186,24 @@
         : 'Exemple préparé pour la démonstration. Relisez toujours vos textes avant de les publier.';
       $('#result-note').hidden = false;
     }
-    async function generate(source, tone) {
+    async function generate(source, tone, mode = 'classic') {
       if (state.busy) throw new Error('Une adaptation est déjà en cours.');
       const normalized = typeof source === 'string' ? source.trim().replace(/\s+/g, ' ') : '';
       if (!normalized) throw new Error('Ajoutez un texte avant de lancer l’adaptation.');
       if (normalized.length > 5000) throw new Error('Votre texte dépasse la limite de 5 000 caractères.');
+      if (!['classic', 'magic'].includes(mode)) throw new Error('Choisissez une adaptation classique ou magique.');
       if (!['warm', 'commercial'].includes(tone)) throw new Error('Choisissez l’un des deux tons proposés.');
       if (!state.user && state.credits === 0) throw new Error('Vous avez utilisé les crédits de démonstration. Créez un compte pour démarrer votre essai gratuit.');
       if (!state.user && normalized !== EXAMPLE) throw new Error('Connectez-vous pour adapter votre propre texte. La démonstration sans compte utilise uniquement le texte d’exemple.');
       if (state.user && (!state.quotaReady || state.credits === 0)) throw new Error(state.plan === 'monthly' ? 'Vos crédits sont épuisés pour cette période, ou votre abonnement n’est plus actif.' : 'Votre essai est terminé ou vos crédits sont épuisés.');
       state.busy = true;
+      state.generationMode = mode;
       $('#adapt-error').style.display = 'none';
-      $('#generate-button').disabled = true;
-      $('#generate-button').textContent = 'Préparation des deux versions…';
+      updateQuota();
       $('#results').setAttribute('aria-busy', 'true');
       try {
         if (state.user) {
-          const response = await fetch('/api/adapt', {method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:normalized,tone}),signal:AbortSignal.timeout(50000)});
+          const response = await fetch('/api/adapt', {method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:normalized,tone,mode}),signal:AbortSignal.timeout(50000)});
           const result = await response.json();
           if (!response.ok) {
             const messages = {UNAUTHORIZED:'Reconnectez-vous pour adapter ce texte.',TRIAL_EXPIRED:'Votre essai de 7 jours est terminé.',SUBSCRIPTION_INACTIVE:'Votre abonnement n’est pas actif. Vérifiez votre compte ou souscrivez.',QUOTA_EXHAUSTED:'Vous avez utilisé toutes les adaptations de votre période.',SERVICE_UNAVAILABLE:'Le service est momentanément indisponible. Aucun crédit n’a été utilisé.',GENERATION_FAILED:'La génération a échoué. Aucun crédit n’a été utilisé.',INVALID_INPUT:'Vérifiez votre texte et le ton choisi.'};
@@ -202,12 +216,13 @@
           state.quotaReady = true;
         } else {
           await new Promise(resolve => setTimeout(resolve, 450));
-          state.outputs = {...DEMO_OUTPUTS[tone]};
+          state.outputs = {...(mode === 'magic' ? DEMO_MAGIC_OUTPUTS : DEMO_OUTPUTS)[tone]};
           state.credits -= 1;
         }
         renderResults(state.outputs);
+        if (mode === 'magic') $('#result-note').textContent = state.user ? 'Textes sublimés par une IA. Vérifiez les faits avant de publier. Une nouvelle génération utilise une adaptation.' : 'Exemple de réécriture magique préparé pour la démonstration. Une génération utilise un crédit de démonstration.';
         updateQuota();
-        return {mode:state.user?state.plan:'demo',creditsRemaining:state.credits,...state.outputs};
+        return {mode:state.user?state.plan:'demo',generationMode:mode,creditsRemaining:state.credits,...state.outputs};
       } finally {
         state.busy = false;
         $('#results').setAttribute('aria-busy', 'false');
@@ -261,7 +276,7 @@
     function updateCount() { $('#character-count').textContent = $('#source-text').value.length.toLocaleString('fr-FR') + ' / 5 000'; }
     $('#source-text').addEventListener('input', updateCount);
     $('#load-example').addEventListener('click', () => {$('#source-text').value = EXAMPLE;updateCount();$('#adapt-error').style.display='none';$('#source-text').focus();});
-    $('#adapt-form').addEventListener('submit', async event => {event.preventDefault();try {await generate($('#source-text').value,$('input[name="tone"]:checked').value);}catch(error){showError(error.message);}});
+    $('#adapt-form').addEventListener('submit', async event => {event.preventDefault();try {await generate($('#source-text').value,$('input[name="tone"]:checked').value,event.submitter?.id === 'magic-button' ? 'magic' : 'classic');}catch(error){showError(error.message);}});
     $$('[data-copy]').forEach(button => button.addEventListener('click', () => copyText(button.dataset.copy,button)));
     $$('[data-auth-tab]').forEach(button => button.addEventListener('click', () => setAuthMode(button.dataset.authTab)));
     $('.auth-tabs').addEventListener('keydown', event => {if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();setAuthMode(state.authMode==='signup'?'login':'signup');$('[data-auth-tab="'+state.authMode+'"]').focus();});
