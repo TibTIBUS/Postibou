@@ -93,6 +93,30 @@ async function persistSubscription(sql, userId, subscription, previousSubscripti
   `;
 }
 
+export async function fulfillPaidCheckout(sql, stripe, object, { confirmPurchase = confirmContractPurchase, referralPurchase = recordReferralPurchase, prices = { launch: launchPrice, standard: standardPrice } } = {}) {
+  if (object?.mode !== 'subscription' || object.payment_status !== 'paid') throw new Error('CHECKOUT_NOT_PAID');
+          const userId = object.client_reference_id;
+          const subId = subscriptionId(object.subscription);
+          if (!userId || !subId) throw new Error('CHECKOUT_REFERENCE_MISSING');
+          const subscription = await stripe.subscriptions.retrieve(subId);
+          const mapped = await sql`SELECT user_id, stripe_subscription_id FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
+          if (!mapped.length) throw new Error('POSTIBOU_ACCOUNT_MISSING');
+          const previousId = mapped[0].stripe_subscription_id;
+          if (previousId && previousId !== subscription.id) {
+            const previous = await stripe.subscriptions.retrieve(previousId);
+            if (!['canceled', 'incomplete_expired'].includes(previous.status)) throw new Error('SUBSCRIPTION_CONFLICT');
+          }
+          // Provide the accepted contract before granting paid service access.
+          // If mail is unavailable, Stripe retries this event; no paid quota is activated.
+          await confirmPurchase(sql, stripe, object, subscription);
+          // Claim the mapping atomically before scheduling; two different completed
+          // sessions must never silently replace one another's active subscription.
+          const saved = await persistSubscription(sql, userId, subscription, previousId || null);
+          if (!saved.length) throw new Error('SUBSCRIPTION_CONFLICT');
+          await scheduleLaunchPriceChange(stripe, subscription, prices);
+          await referralPurchase(sql, object, subscription);
+}
+
 export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET'), confirmPurchase = confirmContractPurchase, referralPurchase = recordReferralPurchase, referralRenewal = applyReferralMonth, referralSettlement = settleReferralInvoice, prices = { launch: launchPrice, standard: standardPrice } } = {}) {
   return async request => {
     if (request.method !== 'POST') return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
@@ -127,26 +151,7 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
       const object = event.data?.object;
       if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) {
         if (object?.mode === 'subscription' && object.payment_status === 'paid') {
-          const userId = object.client_reference_id;
-          const subId = subscriptionId(object.subscription);
-          if (!userId || !subId) throw new Error('CHECKOUT_REFERENCE_MISSING');
-          const subscription = await stripe.subscriptions.retrieve(subId);
-          const mapped = await sql`SELECT user_id, stripe_subscription_id FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
-          if (!mapped.length) throw new Error('POSTIBOU_ACCOUNT_MISSING');
-          const previousId = mapped[0].stripe_subscription_id;
-          if (previousId && previousId !== subscription.id) {
-            const previous = await stripe.subscriptions.retrieve(previousId);
-            if (!['canceled', 'incomplete_expired'].includes(previous.status)) throw new Error('SUBSCRIPTION_CONFLICT');
-          }
-          // Provide the accepted contract before granting paid service access.
-          // If mail is unavailable, Stripe retries this event; no paid quota is activated.
-          await confirmPurchase(sql, stripe, object, subscription);
-          // Claim the mapping atomically before scheduling; two different completed
-          // sessions must never silently replace one another's active subscription.
-          const saved = await persistSubscription(sql, userId, subscription, previousId || null);
-          if (!saved.length) throw new Error('SUBSCRIPTION_CONFLICT');
-          await scheduleLaunchPriceChange(stripe, subscription, prices);
-          await referralPurchase(sql, object, subscription);
+          await fulfillPaidCheckout(sql, stripe, object, { confirmPurchase, referralPurchase, prices });
         }
       // Lifecycle events may precede Checkout: they can refresh an already
       // confirmed subscription, never activate a new one through an old customer.

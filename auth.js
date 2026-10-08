@@ -291,3 +291,21 @@ $('#claim-account-referral').addEventListener('click',async()=>{
  if(!invitationCode||!state.user)return;const button=$('#claim-account-referral');button.disabled=true;
  try{const response=await fetch('/api/referrals',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:invitationCode,accepted:true}),signal:AbortSignal.timeout(15000)});const data=await response.json();if(!response.ok)throw Error(data.code==='REFERRAL_ALREADY_ASSIGNED'?'Un parrain est déjà associé à votre compte.':'Ce lien ne peut pas être activé sur votre compte. Le parrainage concerne un nouveau compte, avant sa première souscription.');invitationCode=null;try{sessionStorage.removeItem('postibou-invitation');}catch{}const url=new URL(location.href);url.searchParams.delete('parrain');history.replaceState(null,'',url.pathname+url.search+url.hash);$('#signup-referral-invitation').hidden=true;await refreshReferrals();notify('Votre parrainage est enregistré.');}catch(error){$('#referral-message').textContent=error.message||'Le parrainage est momentanément indisponible.';}finally{button.disabled=false;}
 });
+
+let paymentSyncBusy = false;
+async function recoverPayment() {
+  if (paymentSyncBusy || !state.user) return;
+  paymentSyncBusy = true;
+  const button = $('#sync-payment'), message = $('#sync-payment-message');
+  button.disabled = true; message.textContent = 'Vérification sécurisée auprès de Stripe…';
+  try {
+    const response = await fetch('/api/billing/sync', {method:'POST',credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(55000)});
+    const data = await response.json();
+    if (!response.ok) { message.textContent = 'L’activation demande une vérification par l’assistance. Ne payez pas à nouveau. Référence : ' + (data.reason || data.code || 'SYNC_FAILED'); return; }
+    message.textContent = data.synced ? 'Paiement confirmé. Votre abonnement est activé.' : 'Aucun nouveau paiement confirmé pour ce compte. Ne payez pas à nouveau si vous avez déjà été débité.';
+    if (data.synced) await refreshSession();
+  } catch { message.textContent = 'La vérification n’a pas abouti. Réessayez sans refaire de paiement.'; }
+  finally { button.disabled = false; paymentSyncBusy = false; }
+}
+$('#sync-payment').addEventListener('click',recoverPayment);
+if(new URLSearchParams(location.search).get('billing') === 'success') sessionCheck?.then(()=>recoverPayment()).catch(()=>{});
