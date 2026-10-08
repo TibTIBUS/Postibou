@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import vm from 'node:vm';
+test('public email-only auth session loads referral counters and private confirmations',async()=>{
+ const nodes=new Map();const element=()=>({style:{},dataset:{},value:'',textContent:'',hidden:false,disabled:false,children:[],classList:{add(){},remove(){},toggle(){}},setAttribute(){},removeAttribute(){},addEventListener(){},replaceChildren(){this.children=[];},append(...children){this.children.push(...children);}});
+ const $=selector=>{if(!nodes.has(selector))nodes.set(selector,element());return nodes.get(selector);};
+ const requests=[];let done;const panelsLoaded=new Promise(resolve=>done=resolve);
+ const fetch=async url=>{requests.push(url);let body;
+ if(url==='/api/auth/session')body={user:{email:'owner@example.test',emailVerified:true}};
+ else if(url==='/api/usage')body={plan:'trial',creditsRemaining:10,quota:10,hasBilling:true};
+ else if(url==='/api/referrals')body={link:'https://postibou.netlify.app/?parrain=AAAAAAAAAAAAAAAA#connexion',pending:2,validated:3,available:1,used:1,scheduled:1};
+ else if(url==='/api/billing/confirmations')body={confirmations:[{id:'11111111-1111-4111-8111-111111111111',paidAt:'2026-10-08T12:00:00Z',emailStatus:'sent'}]};
+ else throw Error('unexpected request '+url);
+ if(requests.includes('/api/referrals')&&requests.includes('/api/billing/confirmations'))queueMicrotask(done);
+ return Response.json(body);
+ };
+ const state={route:'compte',user:null};
+ const context=vm.createContext({$, $$:selector=>selector==='[data-referral-badge]'?[]:[$(selector)],state,fetch,Response,AbortSignal,URL,URLSearchParams,Intl,Date,JSON,Error,Number,String,Boolean,location:{search:'',hash:'#compte',href:'https://postibou.netlify.app/#compte'},history:{replaceState(){}},sessionStorage:{getItem:()=>null,removeItem(){},setItem(){}},window:{addEventListener(){}},document:{addEventListener(){},createElement:element},navigator:{},notify(){},updateQuota(){},navigate(route){state.route=route;}});
+ vm.runInContext(await readFile(new URL('../auth.js',import.meta.url),'utf8'),context);
+ await Promise.race([panelsLoaded,new Promise((_,reject)=>setTimeout(()=>reject(Error('account panels were not loaded')),1000))]);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal($('#referral-pending').textContent,2);assert.equal($('#referral-validated').textContent,3);assert.equal($('#referral-available').textContent,1);assert.equal($('#copy-referral').disabled,false);assert.match($('#referral-link').value,/parrain=/);
+ assert.equal($('#confirmation-list').children.length,1);assert.match($('#confirmation-list').children[0].children[0].href,/api\/billing\/confirmations\?receipt=/);
+});
