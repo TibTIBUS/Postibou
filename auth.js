@@ -216,7 +216,7 @@ refreshSession().finally(() => {
 let confirmationCheck = 0;
 async function refreshContractConfirmations() {
   const requestId = ++confirmationCheck;
-  const userId = state.user?.id;
+  const userId = state.user?.email;
   if (!userId || state.route !== 'compte') return;
   const panel = $('#account-confirmations');
   const list = $('#confirmation-list');
@@ -224,7 +224,7 @@ async function refreshContractConfirmations() {
   try {
     const response = await fetch('/api/billing/confirmations', {credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
     const data = await response.json();
-    if (requestId !== confirmationCheck || state.user?.id !== userId || state.route !== 'compte') return;
+    if (requestId !== confirmationCheck || state.user?.email !== userId || state.route !== 'compte') return;
     if (!response.ok) throw new Error('Confirmation unavailable');
     list.replaceChildren();
     const rows = Array.isArray(data.confirmations) ? data.confirmations : [];
@@ -246,7 +246,7 @@ async function refreshContractConfirmations() {
       line.append(status); list.append(line);
     }
   } catch {
-    if (requestId !== confirmationCheck || state.user?.id !== userId || state.route !== 'compte') return;
+    if (requestId !== confirmationCheck || state.user?.email !== userId || state.route !== 'compte') return;
     panel.hidden = !state.usage?.hasBilling;
     message.textContent = 'Impossible de charger vos confirmations. Réessayez dans quelques instants.';
   }
@@ -268,10 +268,10 @@ function clearReferralView(){
  $('#referral-progress').value=0;$$('[data-referral-badge]').forEach(el=>el.classList.remove('earned'));
 }
 async function refreshReferrals(){
- const check=++referralCheck,user=state.user?.id;if(!user||state.route!=='compte')return;
+ const check=++referralCheck,user=state.user?.email;if(!user||state.route!=='compte')return;
  try{
   const response=await fetch('/api/referrals',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
-  const data=await response.json();if(check!==referralCheck||state.user?.id!==user||state.route!=='compte')return;
+  const data=await response.json();if(check!==referralCheck||state.user?.email!==user||state.route!=='compte')return;
   if(!response.ok)throw Error('unavailable');
   referralLink=data.link;$('#referral-link').value=referralLink;$('#copy-referral').disabled=false;$('#share-referral').disabled=false;
   for(const name of ['pending','validated','available'])$('#referral-'+name).textContent=Number(data[name])||0;
@@ -282,7 +282,7 @@ async function refreshReferrals(){
   $('#referral-savings').textContent=(Number(data.used)||0)+' mois déjà utilisé'+(data.used>1?'s':'')+' · '+(Number(data.scheduled)||0)+' réservé'+(data.scheduled>1?'s':'')+' pour une échéance.';
   $('#referral-message').textContent=data.attributed?'Votre parrainage a été enregistré. Les récompenses sont attribuées au parrain après validation.':'';
   $('#account-referral-invitation').hidden=!invitationCode||data.attributed;
- }catch{if(check===referralCheck&&state.user?.id===user)$('#referral-message').textContent='Le parrainage est momentanément indisponible. Revenez dans quelques instants.';}
+ }catch{if(check===referralCheck&&state.user?.email===user)$('#referral-message').textContent='Le parrainage est momentanément indisponible. Revenez dans quelques instants.';}
 }
 $('#copy-referral').addEventListener('click',async()=>{if(!referralLink)return;try{await navigator.clipboard.writeText(referralLink);notify('Votre lien est copié. Partagez-le avec la personne de votre choix.');}catch{$('#referral-link').select();notify('Sélectionnez et copiez votre lien.');}});
 $('#share-referral').addEventListener('click',async()=>{if(!referralLink)return;if(!navigator.share){$('#copy-referral').click();return;}try{await navigator.share({title:'Découvrez Postibou',text:'Préparez vos textes Facebook et Instagram avec Postibou. Voici mon lien de parrainage :',url:referralLink});}catch{}});
