@@ -1,0 +1,21 @@
+// Resume only final cancellation checks after a network timeout; never creates payments.
+import Stripe from 'stripe';import {readFile,writeFile} from 'node:fs/promises';import assert from 'node:assert/strict';import {randomBytes} from 'node:crypto';
+import {billingDatabase,auth,userId,origin} from '../tests/helpers/billing-database.mjs';import {createStripeWebhookHandler} from '../netlify/functions/stripe-webhook.mjs';import {createUsageHandler} from '../netlify/functions/usage.mjs';
+const c=JSON.parse(await readFile(process.env.POSTIBOU_CLOCK_CREDENTIALS,'utf8'));const f=JSON.parse(await readFile(process.env.POSTIBOU_CLOCK_FIXTURES,'utf8'));assert.equal(f.customer,'cus_VP00dp0JNmXu2x');assert.equal(f.clock,'clock_1UOC0B9BDDs3b0QjJNJOyXWH');
+const stripe=new Stripe(c['uat:postibou-test'],{apiVersion:'2026-08-26.dahlia',httpClient:Stripe.createFetchHttpClient(),timeout:45000,maxNetworkRetries:1,stripeAccount:'acct_1UOADR9BDDs3b0Qj'});
+const customer=await stripe.customers.retrieve(f.customer);assert.equal(customer.livemode,false);assert.equal(customer.test_clock,f.clock);
+let clock=await stripe.testHelpers.testClocks.retrieve(f.clock);console.log(JSON.stringify({check:'resume-clock',status:clock.status,frozen:clock.frozen_time}));
+const list=await stripe.subscriptions.list({customer:f.customer,status:'all',limit:10});assert.equal(list.data.length,1);let sub=list.data[0];assert.equal(sub.livemode,false);
+const end=Date.parse('2027-03-08T07:00:04.000Z')/1000;
+assert.ok(sub.status==='canceled'||sub.cancel_at_period_end||sub.cancel_at,'Cancellation must already be requested');
+if(clock.frozen_time<end+7200&&clock.status==='ready')await stripe.testHelpers.testClocks.advance(f.clock,{frozen_time:end+7200},{idempotencyKey:'postibou_clock_final_'+f.clock});
+for(let i=0;i<20;i++){clock=await stripe.testHelpers.testClocks.retrieve(f.clock);if(clock.status==='ready'&&clock.frozen_time>=end+7200)break;assert.notEqual(clock.status,'internal_failure');await new Promise(r=>setTimeout(r,2000));}
+assert.equal(clock.status,'ready');assert.ok(clock.frozen_time>=end+7200);sub=await stripe.subscriptions.retrieve(sub.id);assert.equal(sub.status,'canceled');console.log(JSON.stringify({check:'stripe-canceled',subscription:sub.id,status:sub.status}));
+const invoices=(await stripe.invoices.list({customer:f.customer,subscription:sub.id,limit:20})).data;
+assert.equal(invoices.length,5);assert.deepEqual(invoices.map(i=>i.amount_paid).sort(),[790,790,790,990,990]);for(const inv of invoices){assert.equal(inv.status,'paid');assert.equal(inv.currency,'eur');assert.equal(inv.livemode,false);}
+const events=await stripe.events.list({type:'customer.subscription.deleted',limit:100});const event=events.data.find(e=>e.data.object.id===sub.id);assert.ok(event);assert.equal(event.livemode,false);
+const database=await billingDatabase();await database.sql`INSERT INTO postibou_entitlements (user_id,stripe_customer_id,stripe_subscription_id,adaptations_used) VALUES (${userId}::uuid,${f.customer},${sub.id},0)`;
+const deps={fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,prices:f.prices};const secret='whsec_'+randomBytes(32).toString('hex');const payload=JSON.stringify(event);
+const webhook=createStripeWebhookHandler({...deps,getWebhookSecret:()=>secret});const response=await webhook(new Request(origin+'/api/stripe/webhook',{method:'POST',headers:{'stripe-signature':stripe.webhooks.generateTestHeaderString({payload,secret})},body:payload}));assert.equal(response.status,200);
+const usage=createUsageHandler({...deps,now:()=>clock.frozen_time*1000});const state=await(await usage(new Request(origin+'/api/usage'))).json();assert.equal(state.active,false);assert.equal(state.creditsRemaining,0);
+const report={account:'acct_1UOADR9BDDs3b0Qj',clock:f.clock,customer:f.customer,subscription:sub.id,status:sub.status,frozen:clock.frozen_time,invoices:invoices.map(i=>({id:i.id,amountPaid:i.amount_paid,status:i.status,periodStart:i.period_start,periodEnd:i.period_end})),active:state.active,credits:state.creditsRemaining,deletedEvent:event.id};console.log(JSON.stringify({check:'final-cancellation-and-invoices',...report}));await writeFile(process.env.POSTIBOU_CLOCK_REPORT,JSON.stringify(report,null,2),{mode:0o600});await database.db.close();

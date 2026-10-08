@@ -8,7 +8,7 @@ const user = { id: '11111111-1111-4111-8111-111111111111', email: 'artisan@examp
 const auth = async () => Response.json({ session: { id: 's1' }, user: { ...user, emailVerified: true } });
 
 function request(path, headers = {}) {
-  return new Request(origin + path, { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json', ...headers }, body: '{}' });
+  return new Request(origin + path, { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({acceptedTerms:true,termsVersion:'2026-10-08'}) });
 }
 
 function database(account) {
@@ -21,6 +21,7 @@ function database(account) {
 test('blocks a second active subscription and cross-origin checkout', async () => {
   let stripeCalled = false;
   const deps = {
+    paidLaunchReady: true,
     fetchAuth: auth,
     getDatabase: () => database({ stripe_customer_id: 'cus_existing', stripe_subscription_status: 'active', subscription_period_end: new Date(Date.now() + 86400000).toISOString() }),
     getStripe: () => { stripeCalled = true; return {}; }
