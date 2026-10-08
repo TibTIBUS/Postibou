@@ -15,6 +15,7 @@ export async function billingDatabase() {
     CREATE TABLE neon_auth."user" (id uuid PRIMARY KEY, "emailVerified" boolean);
     CREATE TABLE public.postibou_entitlements (
       user_id uuid PRIMARY KEY REFERENCES neon_auth."user"(id), plan text DEFAULT 'trial',
+      trial_started_at timestamptz DEFAULT now(), trial_ends_at timestamptz DEFAULT now() + interval '7 days',
       adaptations_used integer DEFAULT 0, updated_at timestamptz DEFAULT now()
     );
     INSERT INTO neon_auth."user" VALUES ('${userId}', true);

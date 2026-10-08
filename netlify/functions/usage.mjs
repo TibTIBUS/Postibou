@@ -4,7 +4,7 @@ export const config = { path: '/api/usage', method: 'GET' };
 const COOKIE_PREFIX = '__Secure-neon-auth.';
 const responseHeaders = { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' };
 
-export function createUsageHandler({ fetchAuth = fetch, getDatabase } = {}) {
+export function createUsageHandler({ fetchAuth = fetch, getDatabase, now = () => Date.now() } = {}) {
   return async request => {
     const reply = (body, status = 200) => Response.json(body, { status, headers: responseHeaders });
     if (request.method !== 'GET') return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
@@ -34,11 +34,11 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase } = {}) {
       `;
       const account = rows[0];
       if (!account) return reply({ code: 'ACCOUNT_UNAVAILABLE' }, 503);
-      const trialActive = account.plan === 'trial' && new Date(account.trial_ends_at).getTime() > Date.now();
+      const trialActive = account.plan === 'trial' && new Date(account.trial_ends_at).getTime() > now();
       const subscriptionActive = account.plan === 'monthly'
         && ['active', 'past_due'].includes(account.stripe_subscription_status)
         && account.subscription_period_end
-        && new Date(account.subscription_period_end).getTime() > Date.now();
+        && new Date(account.subscription_period_end).getTime() > now();
       const active = trialActive || subscriptionActive;
       const quota = account.plan === 'monthly' ? 30 : 10;
       const periodReset = account.plan === 'monthly'

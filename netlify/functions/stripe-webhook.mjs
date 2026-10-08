@@ -37,11 +37,11 @@ function monthsUntilLaunchPriceEnds(periodEnd) {
   return 2 + Math.max(0, monthDistance);
 }
 
-async function scheduleLaunchPriceChange(stripe, subscription) {
+async function scheduleLaunchPriceChange(stripe, subscription, prices) {
   if (subscription.cancel_at_period_end || subscription.cancel_at || subscription.status !== 'active') return;
   const item = subscription.items?.data?.[0];
   const priceId = typeof item?.price === 'string' ? item.price : item?.price?.id;
-  if (priceId !== launchPrice) return;
+  if (priceId !== prices.launch) return;
   const period = subscriptionPeriod(subscription);
   if (!period.start || !period.end) throw new Error('SUBSCRIPTION_PERIOD_UNAVAILABLE');
   const schedule = subscription.schedule
@@ -56,8 +56,8 @@ async function scheduleLaunchPriceChange(stripe, subscription) {
     end_behavior: 'release',
     proration_behavior: 'none',
     phases: [
-      { start_date: start, duration: { interval: 'month', interval_count: intervalCount }, items: [{ price: launchPrice, quantity: 1 }], proration_behavior: 'none' },
-      { duration: { interval: 'month', interval_count: 1 }, items: [{ price: standardPrice, quantity: 1 }], proration_behavior: 'none' }
+      { start_date: start, duration: { interval: 'month', interval_count: intervalCount }, items: [{ price: prices.launch, quantity: 1 }], proration_behavior: 'none' },
+      { duration: { interval: 'month', interval_count: 1 }, items: [{ price: prices.standard, quantity: 1 }], proration_behavior: 'none' }
     ]
   }, { idempotencyKey: 'postibou_phase_update_' + subscription.id });
 }
@@ -91,7 +91,7 @@ async function persistSubscription(sql, userId, subscription, previousSubscripti
   `;
 }
 
-export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET') } = {}) {
+export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET'), prices = { launch: launchPrice, standard: standardPrice } } = {}) {
   return async request => {
     if (request.method !== 'POST') return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
     const signature = request.headers.get('stripe-signature');
@@ -136,7 +136,7 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
           // sessions must never silently replace one another's active subscription.
           const saved = await persistSubscription(sql, userId, subscription, previousId || null);
           if (!saved.length) throw new Error('SUBSCRIPTION_CONFLICT');
-          await scheduleLaunchPriceChange(stripe, subscription);
+          await scheduleLaunchPriceChange(stripe, subscription, prices);
         }
       } else if (['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
         const customer = customerId(object?.customer);
