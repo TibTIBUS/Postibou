@@ -1,3 +1,4 @@
+import { findGift } from './lib/gifts.mjs';
 import { PAID_LAUNCH_READY, TERMS_VERSION, TERMS_SHA256, TERMS_DOCUMENT } from './legal-policy.mjs';
 import { createDatabase, createStripeClient, getVerifiedUser, validPostibouRequest } from './stripe-client.mjs';
 import { SITE_ORIGIN } from './auth.mjs';
@@ -108,6 +109,8 @@ export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createD
       if (['active', 'past_due', 'trialing', 'unpaid', 'paused', 'incomplete'].includes(account.stripe_subscription_status)) {
         return reply({ code: 'SUBSCRIPTION_ALREADY_ACTIVE' }, 409);
       }
+      const gift = await findGift(sql, user.id);
+      if (gift?.gift_active) return reply({ code: 'GIFT_ALREADY_ACTIVE' }, 409);
       const stripe = await getStripe();
       if (account.stripe_subscription_id) {
         const subscription = await stripe.subscriptions.retrieve(account.stripe_subscription_id);

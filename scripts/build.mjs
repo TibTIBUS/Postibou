@@ -9,6 +9,7 @@ await mkdir(publishDirectory, { recursive: true });
 await copyFile(new URL('index.html', projectRoot), new URL('index.html', publishDirectory));
 await copyFile(new URL('auth.js', projectRoot), new URL('auth.js', publishDirectory));
 await copyFile(new URL('admin.js', projectRoot), new URL('admin.js', publishDirectory));
+await copyFile(new URL('homepage-demo.js', projectRoot), new URL('homepage-demo.js', publishDirectory));
 console.log(`Interface prête : ${fileURLToPath(publishDirectory)}`);
 
 

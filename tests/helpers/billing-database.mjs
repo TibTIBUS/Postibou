@@ -27,6 +27,8 @@ export async function billingDatabase() {
   await db.exec(await readFile(new URL('../../db/migrations/2026-10-08-contract-confirmations.sql', import.meta.url), 'utf8'));
   await db.exec(await readFile(new URL('../../db/migrations/2026-10-08-referrals.sql', import.meta.url), 'utf8'));
   await db.exec(await readFile(new URL('../../db/migrations/2026-10-08-mail-check.sql', import.meta.url), 'utf8'));
+  await db.exec(`CREATE TABLE IF NOT EXISTS public.postibou_adaptation_reservations (id uuid PRIMARY KEY,user_id uuid REFERENCES neon_auth."user"(id),status text,completed_at timestamptz);`);
+  await db.exec(await readFile(new URL('../../db/migrations/2026-10-08-gifts.sql', import.meta.url), 'utf8'));
   const queries = [];
   let failSave = false;
   const sql = async (strings, ...values) => {

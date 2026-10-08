@@ -1,3 +1,4 @@
+import { findGift, giftUsage, reserveGift, refundGift } from './lib/gifts.mjs';
 import { randomUUID } from 'node:crypto';
 import { AUTH_URL, SITE_ORIGIN } from './auth.mjs';
 
@@ -26,6 +27,7 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
     let reservationId;
     let userId;
     let sql;
+    let gift;
     try {
       const cookies = (request.headers.get('cookie') || '').split(';').map(part => part.trim()).filter(part => part.startsWith(COOKIE_PREFIX)).join('; ');
       const authResponse = await fetchAuth(AUTH_URL + '/get-session?disableCookieCache=true', {
@@ -42,8 +44,10 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
         SELECT id FROM neon_auth."user" WHERE id = ${userId}::uuid AND "emailVerified" = true
         ON CONFLICT (user_id) DO NOTHING
       `;
+      gift = await findGift(sql, userId);
+      if (gift && !gift.gift_active) return errorReply('GIFT_EXPIRED', 403);
       reservationId = randomUUID();
-      const reserved = await sql`
+      const reserved = gift ? await reserveGift(sql, userId, gift, reservationId) : await sql`
         WITH usage AS (
           UPDATE public.postibou_entitlements
           SET adaptations_used = CASE
@@ -66,6 +70,7 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
         RETURNING id
       `;
       if (!reserved.length) {
+        if (gift) return errorReply('QUOTA_EXHAUSTED', 429);
         const rows = await sql`SELECT plan, trial_ends_at, adaptations_used, stripe_subscription_status, subscription_period_end, subscription_period_start, usage_period_start FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
         const account = rows[0];
         if (account?.plan === 'monthly' && (!['active', 'past_due'].includes(account.stripe_subscription_status) || new Date(account.subscription_period_end).getTime() <= Date.now())) return errorReply('SUBSCRIPTION_INACTIVE', 403);
@@ -114,6 +119,11 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
         UPDATE public.postibou_adaptation_reservations SET status = 'completed', completed_at = now()
         WHERE id = ${reservationId}::uuid AND user_id = ${userId}::uuid AND status = 'reserved'
       `;
+      if (gift) {
+        const current = await findGift(sql, userId);
+        if (!current) throw Error('GIFT_UNAVAILABLE');
+        return Response.json({ mode, facebook: output.facebook.trim(), instagram: output.instagram.trim(), ...giftUsage(current) }, { headers });
+      }
       const rows = await sql`SELECT plan, adaptations_used, trial_ends_at, subscription_period_start, subscription_period_end, usage_period_start FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
       const account = rows[0];
       const quota = account.plan === 'monthly' ? 30 : 10;
@@ -121,7 +131,8 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
       return Response.json({ mode, facebook: output.facebook.trim(), instagram: output.instagram.trim(), plan: account.plan, creditsRemaining: Math.max(0, quota - used), trialEndsAt: account.trial_ends_at, periodEndsAt: account.subscription_period_end }, { headers });
     } catch {
       try {
-        await sql`
+        if (gift) await refundGift(sql, userId, reservationId);
+        else await sql`
           WITH released AS (
             UPDATE public.postibou_adaptation_reservations SET status = 'refunded'
             WHERE id = ${reservationId}::uuid AND user_id = ${userId}::uuid AND status = 'reserved'

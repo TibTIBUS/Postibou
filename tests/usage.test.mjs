@@ -8,6 +8,7 @@ const request = new Request(origin + '/api/usage', { headers: { Origin: origin, 
 test('initializes a verified account trial and returns the remaining quota', async () => {
   const queries = [];
   const sql = async (strings) => {
+    if (strings.join('?').includes('UPDATE public.postibou_gifts')) return [];
     queries.push(strings.join('?'));
     return queries.length === 1 ? [] : [{ plan: 'trial', trial_started_at: '2026-10-07T00:00:00Z', trial_ends_at: new Date(Date.now() + 86400000).toISOString(), adaptations_used: 0 }];
   };
@@ -32,6 +33,7 @@ test('does not create an entitlement for an unverified session', async () => {
 test('returns the monthly quota and keeps access through the paid period end', async () => {
   const sql = async strings => {
     const query = strings.join('?');
+    if (query.includes('UPDATE public.postibou_gifts')) return [];
     if (query.includes('INSERT INTO public.postibou_entitlements')) return [];
     assert.match(query, /SELECT[\s\S]*stripe_customer_id/);
     assert.match(query, /SELECT[\s\S]*stripe_subscription_id/);

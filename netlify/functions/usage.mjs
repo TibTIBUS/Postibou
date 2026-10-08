@@ -1,3 +1,4 @@
+import { findGift, giftUsage } from './lib/gifts.mjs';
 import { AUTH_URL, SITE_ORIGIN } from './auth.mjs';
 
 export const config = { path: '/api/usage', method: 'GET' };
@@ -34,6 +35,8 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase, now = () =>
       `;
       const account = rows[0];
       if (!account) return reply({ code: 'ACCOUNT_UNAVAILABLE' }, 503);
+      const gift = await findGift(sql, session.user.id);
+      if (gift) return reply(giftUsage(gift));
       const trialActive = account.plan === 'trial' && new Date(account.trial_ends_at).getTime() > now();
       const subscriptionActive = account.plan === 'monthly'
         && ['active', 'past_due'].includes(account.stripe_subscription_status)

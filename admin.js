@@ -43,7 +43,7 @@ async function refreshAdmin() {
     for (const key of ['accounts','trials','subscribers','used']) $('#admin-' + key).textContent = data.summary[key];
     $('#admin-updated').textContent = 'Données Postibou actualisées à ' + new Date(data.checkedAt).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'}) + ' (heure de Paris). Adaptations utilisées : total des périodes actuellement enregistrées.';
     $('#admin-alerts').textContent = data.withdrawalsPending ? data.withdrawalsPending + ' demande(s) de rétractation à traiter dans Neon et Stripe.' : '';
-    const labels = {unverified:'E-mail non vérifié',pending:'Essai non démarré',active:'Abonné',inactive:'Abonnement inactif',trial:'Essai gratuit',trial_exhausted:'Essai : crédits épuisés',expired:'Essai terminé'};
+    const labels = {gift:'Accès offert',gift_expired:'Accès offert terminé',unverified:'E-mail non vérifié',pending:'Essai non démarré',active:'Abonné',inactive:'Abonnement inactif',trial:'Essai gratuit',trial_exhausted:'Essai : crédits épuisés',expired:'Essai terminé'};
     for (const user of data.users) {
       const row = document.createElement('tr');
       const cells = [user.email, labels[user.status] + (user.cancelAtPeriodEnd ? ' · Résiliation prévue' : '') + (user.subscriptionStatus === 'past_due' ? ' · Paiement en retard' : ''),
