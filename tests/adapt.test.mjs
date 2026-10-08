@@ -96,3 +96,43 @@ test('rejects an unauthenticated or cross-origin generation', async () => {
   const authenticated = createAdaptHandler({ fetchAuth: sessionFetch, getDatabase: () => { throw new Error('should not open DB'); } });
   assert.equal((await authenticated(request({ source: 'Texte', tone: 'warm' }, { Origin: 'https://attacker.example' }))).status, 403);
 });
+
+for (const tone of ['warm','commercial']) test(`magic rewrite keeps ${tone} tone and returns both publications in one call for one credit`,async()=>{
+  const db=makeDatabase();let calls=0,payload;
+  const handler=createAdaptHandler({fetchAuth:sessionFetch,getDatabase:()=>db.sql,getApiKey:()=> 'test-key',fetchModel:async(url,options)=>{
+    calls++;payload=JSON.parse(options.body);
+    return Response.json({choices:[{message:{content:JSON.stringify({facebook:'Publication Facebook retravaillée',instagram:'Publication Instagram retravaillée'})}}]});
+  }});
+  const response=await handler(request({source:'Terrasse en bois terminée à Créances.',tone,mode:'magic'}));
+  assert.equal(response.status,200);const output=await response.json();
+  assert.equal(output.mode,'magic');assert.equal(output.creditsRemaining,9);assert.equal(db.used,1);assert.equal(calls,1);
+  assert.deepEqual([...db.reservations.values()],['completed']);
+  assert.match(payload.messages[0].content,/Mode SUBLIMER/);
+  assert.match(payload.messages[0].content,/N'invente ni détail/);
+  assert.match(payload.messages[0].content,tone==='commercial'?/commercial, incitatif/:/professionnel et chaleureux/);
+  assert.equal(payload.max_tokens,1600);
+});
+
+test('invalid rewrite mode is rejected before authentication, reservation or model call',async()=>{
+  let called=false;
+  const fail=()=>{called=true;throw new Error('unexpected')};
+  const handler=createAdaptHandler({fetchAuth:fail,getDatabase:fail,fetchModel:fail});
+  for(const mode of ['unknown',null,{},true]) assert.equal((await handler(request({source:'Texte',tone:'warm',mode}))).status,400);
+  assert.equal(called,false);
+});
+
+test('magic rewrite refunds the single reserved credit if the response is truncated',async()=>{
+  const db=makeDatabase();let calls=0;
+  const handler=createAdaptHandler({fetchAuth:sessionFetch,getDatabase:()=>db.sql,getApiKey:()=> 'test-key',fetchModel:async()=>{
+    calls++;return Response.json({choices:[{message:{content:'{"facebook":"Incomplet'}}]});
+  }});
+  assert.equal((await handler(request({source:'Chantier terminé',tone:'warm',mode:'magic'}))).status,502);
+  assert.equal(calls,1);assert.equal(db.used,0);assert.deepEqual([...db.reservations.values()],['refunded']);
+});
+
+test('magic rewrite cannot bypass an exhausted quota',async()=>{
+  const db=makeDatabase(10);let calls=0;
+  const handler=createAdaptHandler({fetchAuth:sessionFetch,getDatabase:()=>db.sql,getApiKey:()=> 'test-key',fetchModel:async()=>{calls++;throw new Error('unexpected')}});
+  const response=await handler(request({source:'Chantier terminé',tone:'commercial',mode:'magic'}));
+  assert.equal(response.status,429);assert.equal(calls,0);assert.equal(db.used,10);
+});
