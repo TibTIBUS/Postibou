@@ -23,7 +23,7 @@ async function refreshAdminAccess() {
     if (state.route === 'administration') await refreshAdmin();
   } catch { if (check === adminAccessCheck && state.route === 'administration') $('#admin-message').textContent = 'Impossible de vérifier votre accès. Actualisez la page.'; }
 }
-const adminDate = value => value ? new Date(value).toLocaleDateString('fr-FR') : '—';
+const adminDate = value => value ? new Date(value).toLocaleDateString('fr-FR',{timeZone:'Europe/Paris'}) : '—';
 async function refreshAdmin() {
   const requestId = ++adminRequest;
   $('#admin-content').hidden = true;
@@ -41,7 +41,7 @@ async function refreshAdmin() {
     if (!response.ok) { if ([401,403].includes(response.status)) clearAdmin(); throw Error(response.status === 403 ? 'Accès administrateur refusé.' : 'Les données sont momentanément indisponibles. Réessayez.'); }
     $('#admin-content').hidden = false;
     for (const key of ['accounts','trials','subscribers','used']) $('#admin-' + key).textContent = data.summary[key];
-    $('#admin-updated').textContent = 'Données Postibou actualisées à ' + new Date(data.checkedAt).toLocaleTimeString('fr-FR') + '. Adaptations utilisées : total des périodes actuellement enregistrées.';
+    $('#admin-updated').textContent = 'Données Postibou actualisées à ' + new Date(data.checkedAt).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'}) + ' (heure de Paris). Adaptations utilisées : total des périodes actuellement enregistrées.';
     $('#admin-alerts').textContent = data.withdrawalsPending ? data.withdrawalsPending + ' demande(s) de rétractation à traiter dans Neon et Stripe.' : '';
     const labels = {unverified:'E-mail non vérifié',pending:'Essai non démarré',active:'Abonné',inactive:'Abonnement inactif',trial:'Essai gratuit',trial_exhausted:'Essai : crédits épuisés',expired:'Essai terminé'};
     for (const user of data.users) {
