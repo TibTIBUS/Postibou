@@ -32,3 +32,9 @@ PAID_LAUNCH_READY reste faux dans netlify/functions/legal-policy.mjs. Cette ferm
 Lors d’une nouvelle version, conserver les fichiers historiques et les preuves, créer un nouveau document et un nouvel identifiant de version ; ne jamais réécrire une version acceptée.
 
 Références : Service-Public F33338 (médiation), Code de la consommation L221-21 (rétractation en ligne à compter du 19 juin 2026), D211-4 et son annexe (garanties numériques), CNIL information des personnes ; voir aussi launch-audit-2026-10-08.md.
+
+## Contrôle du déploiement
+
+Les PR 4 et 5 sont fusionnées. Netlify a publié f66b9195dea09012c82bbdc5647cd9ca2619dc04, déploiement 6ac766066bb0060008d456b9 (ready). Les pages et l’API de statut sont accessibles. Les écritures anonymes de paiement/rétractation renvoient 401 ; le paiement depuis une autre origine renvoie 403. Les deux tables juridiques sont présentes sur Neon production.
+
+Le contrôle a révélé que le webhook rejetait une signature invalide avec une erreur 500 indistincte : le correctif sépare désormais signature absente/invalide (400), configuration absente (503) et traitement échoué (500), et vérifie le refus avant tout accès à la base. Aucun événement authentique ni paiement réel n’a été envoyé en production.

@@ -96,16 +96,20 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
     if (request.method !== 'POST') return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
     const signature = request.headers.get('stripe-signature');
     const secret = getWebhookSecret();
-    if (!signature || !secret) return reply({ code: 'WEBHOOK_NOT_CONFIGURED' }, 503);
+    if (!signature) return reply({ code: 'INVALID_SIGNATURE' }, 400);
+    if (!secret) return reply({ code: 'WEBHOOK_NOT_CONFIGURED' }, 503);
     let raw;
     try {
       raw = await request.text();
       if (raw.length > 256_000) return reply({ code: 'PAYLOAD_TOO_LARGE' }, 413);
     } catch { return reply({ code: 'INVALID_PAYLOAD' }, 400); }
 
+    let stripe;
+    try { stripe = await getStripe(); } catch { return reply({ code: 'WEBHOOK_NOT_CONFIGURED' }, 503); }
+    let event;
+    try { event = stripe.webhooks.constructEvent(Buffer.from(raw), signature, secret); }
+    catch { return reply({ code: 'INVALID_SIGNATURE' }, 400); }
     try {
-      const stripe = await getStripe();
-      const event = stripe.webhooks.constructEvent(Buffer.from(raw), signature, secret);
       const sql = await getDatabase();
       const inserted = await sql`
         INSERT INTO public.postibou_stripe_events (event_id, status)

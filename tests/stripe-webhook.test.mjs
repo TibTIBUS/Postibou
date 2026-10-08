@@ -96,3 +96,17 @@ test('an out-of-order subscription update persists the current cancellation inst
   assert.equal(retrieved, true);
   assert.equal(saved[7], true);
 });
+
+
+test('missing or forged Stripe signature is rejected before database access', async () => {
+  const Stripe = (await import('stripe')).default;
+  const stripe = new Stripe('sk_test_synthetic_only');
+  let databaseCalled = false;
+  const handler = createStripeWebhookHandler({getStripe:()=>stripe,getWebhookSecret:()=> 'whsec_synthetic_only',getDatabase:()=>{databaseCalled=true;throw new Error('unexpected')}});
+  for(const signature of [null,'t=0,v1=invalid']) {
+    const headers={'Content-Type':'application/json'};if(signature)headers['Stripe-Signature']=signature;
+    const response=await handler(new Request('https://postibou.netlify.app/api/stripe/webhook',{method:'POST',headers,body:JSON.stringify(event)}));
+    assert.equal(response.status,400);assert.equal((await response.json()).code,'INVALID_SIGNATURE');
+  }
+  assert.equal(databaseCalled,false);
+});
