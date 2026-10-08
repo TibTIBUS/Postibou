@@ -6,13 +6,13 @@ Document destiné à la revue de l'éditeur. Ne pas publier les champs [À CONFI
 
 Postibou est un service édité par Thibaut Marie, entrepreneur individuel, exerçant sous le nom commercial Localia.
 
-- SIREN/SIRET : [À CONFIRMER].
+- SIREN : 892 882 796. Le SIRET n’est pas publié dans les sources consultées ; ne pas le reconstituer.
 - Immatriculation applicable : [À CONFIRMER].
-- Adresse de domiciliation : [À CONFIRMER].
-- E-mail : [À CONFIRMER].
-- Téléphone : [À CONFIRMER].
-- Directeur de publication : Thibaut Marie [À CONFIRMER dans cette fonction].
-- Régime et mentions de TVA : [À CONFIRMER].
+- Adresse : 92 rue des quatre rues, 50710 Créances, France.
+- E-mail : gestion.localia@gmail.com.
+- Téléphone : 06 85 22 47 20.
+- Directeur de publication : Thibaut MARIE.
+- Régime déclaré sur localiapro.fr : franchise en base. Mention : « TVA non applicable, art. 293 B du CGI ». Contrôler la cohérence des réglages Stripe avant vente.
 
 Le site est hébergé par Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, États-Unis. Contact fournisseur : support@netlify.com. Téléphone de l'hébergeur : [À VÉRIFIER auprès de Netlify avant publication]. L'adresse est issue des [conditions officielles Netlify](https://www.netlify.com/legal/terms-of-use/), consultées le 8 octobre 2026.
 
@@ -28,7 +28,7 @@ Les publications sont proposées par une intelligence artificielle. L'utilisateu
 
 ### Comptes
 
-Le compte se crée par e-mail vérifié ou via Google. L'utilisateur doit utiliser des informations exactes et préserver l'accès à son compte. Public éligible et capacité à représenter une entreprise ou une association : [À DÉFINIR].
+Le compte se crée par e-mail vérifié ou via Google. L'utilisateur doit utiliser des informations exactes et préserver l'accès à son compte. Le service est conçu en priorité pour les artisans et est également accessible aux particuliers majeurs et aux associations. La personne qui souscrit pour une entreprise ou une association doit être habilitée à la représenter. La qualification professionnelle ou non professionnelle dépend de la situation réelle de la souscription ; elle ne se déduit pas seulement du nom du compte.
 
 ### Essai gratuit
 
@@ -38,7 +38,7 @@ L'essai dure sept jours à compter de l'activation de ses droits et comprend dix
 
 L'abonnement inclut trente adaptations par période mensuelle de facturation. Les crédits sont renouvelés à chaque échéance, sans report des crédits inutilisés. Une nouvelle génération, même à partir du même texte avec un ton différent, compte comme une nouvelle adaptation. Une génération signalée comme échouée fait l'objet d'une restitution du crédit selon le mécanisme du service.
 
-Pour les échéances jusqu'au 31 décembre 2026 inclus, le prix total annoncé est de 7,90 € par mois. À compter de la première échéance mensuelle de 2027, il passe automatiquement à 9,90 € par mois. Une souscription à partir de 2027 est au prix de 9,90 € par mois. Le régime de TVA et la formulation définitive du prix seront précisés après confirmation fiscale.
+Pour les échéances jusqu'au 31 décembre 2026 inclus, le prix total annoncé est de 7,90 € par mois. À compter de la première échéance mensuelle de 2027, il passe automatiquement à 9,90 € par mois. Une souscription à partir de 2027 est au prix de 9,90 € par mois. Ces montants sont les prix totaux à payer. Selon le régime déclaré par Localia, la TVA est non applicable, art. 293 B du CGI. Vérifier avant publication que Stripe ne calcule aucune TVA supplémentaire sur ces ventes.
 
 Le passage de prix est annoncé avant souscription. L'abonnement se renouvelle chaque mois jusqu'à résiliation. Le paiement est traité par Stripe. La confirmation de commande et la copie des conditions sur support durable sont [À IMPLÉMENTER/CONTRÔLER].
 
@@ -54,9 +54,9 @@ L'utilisateur doit disposer des droits nécessaires sur le texte fourni. Il ne d
 
 ### Assistance et droits applicables
 
-Support et réclamations : [E-MAIL ET ADRESSE À CONFIRMER]. Conditions de disponibilité, maintien en conformité, remèdes en cas de défaut, droit applicable et traitement des litiges : [À FINALISER selon le public]. Ne pas publier une exclusion générale de responsabilité ni une compétence exclusive de tribunal imposée à tous les utilisateurs.
+Support et réclamations : gestion.localia@gmail.com ou Localia — Thibaut MARIE, 92 rue des quatre rues, 50710 Créances, France. Conditions de disponibilité, maintien en conformité, remèdes en cas de défaut, droit applicable et traitement des litiges : [À FINALISER selon le public]. Ne pas publier une exclusion générale de responsabilité ni une compétence exclusive de tribunal imposée à tous les utilisateurs.
 
-### Compléments si le service accueille des consommateurs
+### Compléments consommateurs — nécessaires pour le public retenu
 
 Rédiger et intégrer avant mise en vente : informations et formulaire de rétractation, démarrage immédiat du service et ses conséquences, fonctionnalité de rétractation en ligne, règles de remboursement, garanties légales des services numériques et encart requis, coordonnées du médiateur réellement choisi. Ne pas présenter ces compléments comme déjà opérationnels.
 
@@ -64,7 +64,7 @@ Pour les associations non-professionnelles : examiner les protections applicable
 
 ## Politique de confidentialité — rédaction partielle fondée sur le code
 
-Le responsable des traitements relatifs à la gestion de Postibou est Thibaut Marie, entrepreneur individuel Localia. Contact pour les droits : [À CONFIRMER].
+Le responsable des traitements relatifs à la gestion de Postibou est Thibaut Marie, entrepreneur individuel Localia. Contact pour les droits : gestion.localia@gmail.com ; adresse postale : 92 rue des quatre rues, 50710 Créances, France.
 
 ### Compte et accès
 
@@ -87,3 +87,13 @@ La configuration effective de collecte, d'entraînement et de rétention est [À
 Présenter séparément les finalités et bases juridiques, destinataires et rôles, durées effectives, transferts hors EEE et garanties, droits d'accès/rectification/effacement/limitation/portabilité/opposition selon leur applicabilité, contact et réclamation auprès de la CNIL. Ne pas annoncer une purge automatique, un hébergement exclusivement européen ou une absence d'entraînement sans vérification.
 
 La politique doit être accessible au moment de l'inscription, y compris Google, et depuis la saisie du texte. L'information sur le traitement n'est pas automatiquement un consentement à demander par une case pour toutes les finalités.
+
+## Parcours retenu : simple pour tous
+
+Décision de Thibaut du 8 octobre 2026 : artisans comme cible principale, accès également ouvert aux associations et aux particuliers. Aucun questionnaire de métier, aucune sélection obligatoire de catégorie juridique et aucun SIRET demandé pour l’essai.
+
+Avant paiement : afficher le prix total, le passage au tarif 2027, les trente adaptations par mois et la résiliation ; permettre la lecture des CGV et enregistrer leur version acceptée côté serveur. Informer sur la confidentialité au moment de l’inscription sans demander un consentement global pour les traitements nécessaires au service.
+
+Dans le compte : conserver la résiliation ordinaire. Ajouter un accès distinct à la rétractation pendant le délai applicable, avec confirmation sur support durable. La politique de remboursement et les conséquences d’un démarrage immédiat doivent être finalisées avant de coder le débit ou remboursement correspondant. Ne pas assimiler utilisation d’un crédit et renonciation automatique au droit de rétractation.
+
+Les garanties impératives restent applicables selon la qualité réelle de l’utilisateur. Les clauses pour consommateurs ne doivent pas être neutralisées par une simple case déclarative. Ne pas imposer un tribunal territorial exclusif aux consommateurs.

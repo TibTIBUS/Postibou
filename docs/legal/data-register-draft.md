@@ -1,6 +1,6 @@
 # Postibou — inventaire des traitements et mesures à finaliser
 
-Responsable : Thibaut Marie, Localia EI. Contact/adresse : à confirmer. Inventaire issu du code au 8 octobre 2026 ; registre de travail, à compléter avec les configurations et contrats réels.
+Responsable : Thibaut Marie, Localia EI. Contact : gestion.localia@gmail.com. Adresse : 92 rue des quatre rues, 50710 Créances, France. Inventaire issu du code au 8 octobre 2026 ; registre de travail, à compléter avec les configurations et contrats réels.
 
 | Traitement | Données repérées | Finalité | Base envisagée à valider | Durée / action nécessaire |
 |---|---|---|---|---|
@@ -9,7 +9,7 @@ Responsable : Thibaut Marie, Localia EI. Contact/adresse : à confirmer. Inventa
 | Réservations de génération | UUID réservation/utilisateur, état, dates | Réserver/restituer les crédits, limiter les doubles traitements | Exécution contractuelle | Nettoyage des métadonnées à définir ; pas de texte stocké par ce mécanisme |
 | Paiement | Identifiants client/abonnement/session Stripe, statut, période, identifiant d'événement webhook | Facturation, activation et résiliation | Exécution contractuelle ; obligation légale pour les pièces comptables applicables | Définir conservation des métadonnées ; contrôler factures et obligations légales séparément |
 | Génération IA | Texte et intention, sortie produite | Reformulation Facebook/Instagram | Exécution du service pour l'utilisateur ; qualification supplémentaire si son texte contient des données de tiers | Traitement transitoire dans la fonction ; rétention fournisseur/logs à vérifier. Prévoir contrat art. 28 si le cas d'usage le nécessite |
-| Support et exercice des droits | E-mail, demande, vérification d'identité proportionnée | Répondre aux demandes et droits | Exécution contractuelle / obligation légale selon demande | Canal à créer/confirmer ; procédure et délais à documenter |
+| Support et exercice des droits | E-mail, demande, vérification d'identité proportionnée | Répondre aux demandes et droits | Exécution contractuelle / obligation légale selon demande | Canal retenu : gestion.localia@gmail.com ; procédure et délais à documenter |
 | Journaux techniques | Potentiellement IP, identifiants de requête et erreurs chez hébergeur/fournisseurs | Sécurité et diagnostic | Intérêt légitime à évaluer | Inventaire des logs/accès et durée réelle à vérifier ; éviter tout contenu utilisateur ou secret dans les logs |
 
 ## Contrôles fournisseurs

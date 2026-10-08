@@ -1,6 +1,6 @@
 # Ouverture commerciale de Postibou — audit du 8 octobre 2026
 
-Version de travail. Cet audit combine la lecture du code et des sources officielles ; il ne certifie pas la conformité du service. Éditeur confirmé par Thibaut : Localia, entreprise individuelle de Thibaut Marie. Le public et le régime fiscal exact restent à confirmer.
+Version de travail. Cet audit combine la lecture du code et des sources officielles ; il ne certifie pas la conformité du service. Éditeur confirmé par Thibaut : Localia, entreprise individuelle de Thibaut Marie. Public confirmé : artisans en priorité, associations et particuliers également admis. Localia publie une franchise en base de TVA ; les réglages Stripe restent à contrôler.
 
 ## Professionnels, particuliers et associations
 
@@ -10,7 +10,7 @@ Ouvrir aux particuliers ajoute notamment rétractation, information précontract
 
 Une association est une personne morale. Selon son activité et l'objet du contrat, elle peut être professionnelle ou non-professionnelle. Un bénévole qui souscrit personnellement peut relever d'une autre qualification. Certaines protections, notamment relatives à la reconduction, s'étendent aux non-professionnels. Ne pas traiter toutes les associations comme des entreprises, ni comme des consommateurs personnes physiques.
 
-Option à décider : conserver la cible marketing « artisans » tout en ouvrant l'accès à d'autres adultes et associations, avec conditions adaptées. Aucune extension du public n'est appliquée par cet audit.
+Décision validée par Thibaut : conserver la cible marketing « artisans » et ouvrir également aux particuliers majeurs et aux associations, avec conditions adaptées. Garder une inscription commune simple, sans questionnaire de métier. Cette décision rend nécessaires les compléments consommateurs avant commercialisation.
 
 Sources : [définitions](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000049464063/2026-04-28), [non-professionnels et reconduction](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032226976), [commerce électronique](https://www.economie.gouv.fr/dgccrf/les-fiches-pratiques/e-commerce-les-regles-entre-professionnels-et-consommateurs).
 
@@ -44,16 +44,15 @@ Sources : [article L221-21 actuel](https://www.legifrance.gouv.fr/codes/article_
 
 ## TVA : réponse de Thibaut et vérification
 
-Thibaut indique ne pas récupérer la TVA et annoncer un prix total à payer. Cela suggère la franchise en base, sans la prouver. La microentreprise et la franchise de TVA sont deux sujets distincts. Sous franchise applicable en France, pas de TVA collectée sur ces ventes et mention « TVA non applicable, art. 293 B du CGI » sur facture. Confirmer avec la situation fiscale réelle avant toute configuration. Les achats de services étrangers peuvent avoir des obligations spécifiques : ne pas déduire de la franchise une absence universelle de formalités.
+Thibaut indique ne pas récupérer la TVA et annoncer un prix total à payer. Les mentions légales et CGV de localiapro.fr indiquent aussi une franchise en base (art. 293 B). Cette déclaration publique fournit la mention à reprendre ; elle ne vérifie pas les réglages Stripe. La microentreprise et la franchise de TVA sont deux sujets distincts. Sous franchise applicable en France, pas de TVA collectée sur ces ventes et mention « TVA non applicable, art. 293 B du CGI » sur facture. Confirmer avec la situation fiscale réelle avant toute configuration. Les achats de services étrangers peuvent avoir des obligations spécifiques : ne pas déduire de la franchise une absence universelle de formalités.
 
 Source : [franchise de TVA](https://www.economie.gouv.fr/entreprises/gerer-sa-fiscalite-et-ses-impots/autres-impots-et-taxes/entreprises-pouvez-vous-beneficier-de-la-franchise-de-tva).
 
 ## Informations à obtenir
 
-- SIREN/SIRET et immatriculation applicables de Localia EI.
-- Adresse de domiciliation à publier, e-mail de support/droits et téléphone professionnel.
-- Confirmation du régime de TVA.
-- Public autorisé et, si nécessaire, médiateur dont relève effectivement Localia.
+- Compléter l’immatriculation applicable si nécessaire ; SIREN, identité, adresse et contacts retrouvés sur localiapro.fr (voir publisher-facts.md).
+- Contrôler les paramètres fiscaux de Stripe avec le régime de franchise publié.
+- Identifier le médiateur réellement conventionné : aucun nom n’a été trouvé dans les pages consultées.
 - Durées de conservation choisies et applicables, configurations de confidentialité des fournisseurs et contrats correspondants.
 
 ## Sources transversales
