@@ -113,7 +113,7 @@ export async function applyReferralMonth(sql,stripe,object,{now=()=>Date.now()}=
       AND NOT EXISTS (SELECT 1 FROM public.postibou_referral_redemptions d WHERE d.referral_id=r.referral_id AND d.status<>'void') ORDER BY qualified_at,created_at LIMIT 1`;
     if(!rewards[0]) return;
     if(!await paymentStillValid(stripe,rewards[0])) { await sql`UPDATE public.postibou_referrals SET status='invalid' WHERE referral_id=${rewards[0].referral_id}::uuid`;return; }
-    const coupon=await stripe.coupons.retrieve(REFERRAL_COUPON);
+    const coupon=await stripe.coupons.retrieve(REFERRAL_COUPON,{expand:['applies_to']});
     if(coupon.deleted || !coupon.valid || coupon.percent_off!==100 || coupon.duration!=='once' || coupon.applies_to?.products?.length!==1 || coupon.applies_to.products[0]!=='prod_VOog5UMGZt2LCL') throw Error('REFERRAL_COUPON_UNAVAILABLE');
     await sql`INSERT INTO public.postibou_referral_redemptions(redemption_id,referral_id,referrer_id,invoice_id,subscription_id,period_start,period_end)
       VALUES (${randomUUID()}::uuid,${rewards[0].referral_id}::uuid,${owner.user_id}::uuid,${invoice.id},${subId(invoice)},${dt(line.period.start)}::timestamptz,${dt(line.period.end)}::timestamptz) ON CONFLICT DO NOTHING`;
