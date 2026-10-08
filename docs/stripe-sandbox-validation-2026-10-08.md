@@ -19,7 +19,7 @@ Sandbox Stripe anonyme isolé `acct_1UOADR9BDDs3b0Qj`, sans paiements réels, sa
 
 ## Points non validés
 
-- La création d'une horloge de test est refusée (403) avec la clé du sandbox non réclamé. Le renouvellement effectivement facturé à 9,90 €, le renouvellement des crédits et la fin réelle de l'accès après résiliation restent à simuler après rattachement du sandbox.
+- Le blocage initial de création d’horloge (403) a été résolu après rattachement du sandbox et autorisation CLI. Les renouvellements, crédits et fin d’accès sont maintenant vérifiés ci-dessous.
 - Le listener CLI reçoit les événements Stripe, mais ne parvient pas à joindre le serveur localhost dans cette exécution. La signature et la logique du webhook ont été vérifiées par rejeu local ; la livraison Stripe → Netlify → Neon en production n'a pas été testée par ce scénario.
 - Ce scénario utilise une identité vérifiée synthétique ; il ne constitue pas un test complet de connexion Neon Auth dans le navigateur.
 
@@ -37,12 +37,36 @@ Exécuter `node scripts/validate-stripe-sandbox.mjs` avec ces variables configur
 
 Terminer les tests avec horloge Stripe dans un sandbox rattaché. Ensuite examiner les mentions légales, les conditions d'abonnement et la confidentialité à partir des sources officielles françaises et des renseignements réels de l'éditeur. La page actuelle « Informations et confidentialité » est une page de préversion ; elle ne remplace pas les documents définitifs.
 
-## Reprise avec horloge — préparation vérifiée, renouvellements en attente
+## Reprise avec horloge — préparation initiale
 
 Le sandbox est désormais réclamé. L’autorisation CLI reçue est limitée au compte `acct_1UOADR9BDDs3b0Qj`, mode test. La lecture API confirme le client `cus_VP00dp0JNmXu2x`, `livemode=false`, rattaché à l’horloge `clock_1UOC0B9BDDs3b0QjJNJOyXWH`, état ready. L’API indique un temps gelé de 1791442804 (8 octobre 2026 à 07:00:04 UTC).
 
 La fonction Checkout réelle, avec prix de test et PostgreSQL en mémoire, a créé `cs_test_a1w0FIq6UGS9bKQkVreQRc7itYRksieztoDr4bKz4JE6Sm1iFrKzLKqflE`. Le formulaire affiche Sandbox et 7,90 €/mois, avec carte fictive 4242. La soumission par l’agent a été refusée par le contrôle automatique du navigateur, qui exige la validation finale par l’utilisateur même en sandbox. Aucun paiement n’est déclaré réussi et l’horloge n’a pas été avancée par cette reprise.
 
-Deux scripts manuels sont préparés : `validate-stripe-clock.mjs` crée le Checkout et refuse les doublons ; `validate-stripe-renewals.mjs` attend le paiement terminé, puis prévoit les renouvellements novembre/décembre à 790 centimes, janvier/février à 990 centimes, les trente crédits renouvelés et la fin d’accès après résiliation. Le second script n’a pas encore été exécuté et ne constitue donc aucune preuve de réussite. Il utilise des événements Stripe authentiques rejoués avec une signature locale, pas une livraison réseau en production.
+Deux scripts manuels sont préparés : `validate-stripe-clock.mjs` crée le Checkout et refuse les doublons ; `validate-stripe-renewals.mjs` attend le paiement terminé, puis prévoit les renouvellements novembre/décembre à 790 centimes, janvier/février à 990 centimes, les trente crédits renouvelés et la fin d’accès après résiliation. Ces scripts étaient initialement préparés sans exécution complète ; les résultats de leur exécution sont consignés dans la section suivante. Il utilise des événements Stripe authentiques rejoués avec une signature locale, pas une livraison réseau en production.
 
 Variables privées : POSTIBOU_CLOCK_CREDENTIALS (fichier d’autorisation CLI, projet postibou-test), POSTIBOU_CLOCK_FIXTURES (créé par le premier script, URL comprise), POSTIBOU_CLOCK_REPORT (rapport final du second). Aucun de ces fichiers ne doit être publié. Exécution Node avec proxy de l’environnement si requis. Ne pas relancer la création pour la session déjà préparée.
+
+## Renouvellements et fin d’accès — vérifiés le 8 octobre 2026
+
+Abonnement de test : `sub_1UOCz99BDDs3b0QjP6BgVGjy`. Calendrier créé par le webhook Postibou : `sub_sched_1UOD0d9BDDs3b0QjiBBkvego`. Le client et les prix sont ceux du sandbox décrit ci-dessus ; aucun paiement réel et aucun changement de Neon ou Netlify production.
+
+| Échéance simulée | Facture Stripe réellement payée en test | Montant | Crédits après traitement |
+|---|---|---|---|
+| 8 octobre 2026 — souscription | in_1UOCz79BDDs3b0QjC7syUKUo | 7,90 € | Activation vérifiée par le scénario précédent ; ici paiement confirmé |
+| 8 novembre 2026 | in_1UOD1S9BDDs3b0QjOFnTRuBb | 7,90 € | 30 |
+| 8 décembre 2026 | in_1UOD2e9BDDs3b0QjoXNXtrwg | 7,90 € | 30 |
+| 8 janvier 2027 | in_1UOD419BDDs3b0QjLBGrV3Mw | 9,90 € | 30 |
+| 8 février 2027 | in_1UOD5Q9BDDs3b0QjoXhNxeGs | 9,90 € | 30 |
+
+Avant chacun des quatre renouvellements, le scénario met les trente crédits précédents à zéro restant dans la base isolée. Le rejeu signé local de l’événement authentique `invoice.paid` active la nouvelle période et rétablit trente crédits. Le rejeu répété est reconnu comme doublon. Le tarif à 9,90 € est ainsi contrôlé au premier renouvellement de 2027 et à celui du mois suivant.
+
+La fonction de résiliation Postibou retourne 200 avec fin le 8 mars 2027 à 07:00:04 UTC. Le contrôle avant échéance confirme l’accès actif et la résiliation programmée. Un timeout réseau de 20 secondes interrompt le script lors du dernier avancement : une reprise en lecture constate que Stripe a bien avancé l’horloge, évitant de refaire cette mutation.
+
+`scripts/finish-stripe-clock.mjs` termine ce contrôle sans créer d’abonnement ni de paiement : abonnement `canceled`, horloge ready au 8 mars 2027 à 09:00:04 UTC, cinq factures seulement, toutes payées (trois à 790 centimes et deux à 990). Aucune nouvelle facture en mars. L’événement authentique `evt_1UOD7M9BDDs3b0QjberdV7uo` de suppression d’abonnement est rejoué localement dans une base isolée remappée au même client : le webhook retourne 200, puis l’API usage indique accès inactif et zéro crédit restant. La base du premier processus étant en mémoire, cette reprise vérifie la transition de fin séparément ; elle ne prétend pas restaurer une base persistante.
+
+Les scripts sauvegardés disposent désormais d’un timeout plus tolérant, de checkpoints et d’une garde empêchant de rejouer tout le scénario sur une horloge déjà avancée. Leur syntaxe est contrôlée. Ces améliorations du harness sont postérieures au premier parcours réussi des renouvellements ; elles ne changent aucun export de production.
+
+### Limites restantes
+
+Ces résultats vérifient Stripe en sandbox et les fonctions serveur avec PostgreSQL isolé, identité synthétique et rejeu local signé. Ils ne prouvent pas la livraison réseau Stripe → Netlify → Neon en production, ni le parcours complet Neon Auth. Un renouvellement refusé en cours d’abonnement n’est pas couvert par ce scénario ; le refus de paiement initial a été testé précédemment. La fiscalité et les mentions de facture en production restent à contrôler pour correspondre à la franchise en base déclarée par Localia.
