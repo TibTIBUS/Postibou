@@ -43,7 +43,7 @@ Tests serveur : origine, méthodes, validation, filtrage des cookies et champs, 
 
 ## Étapes suivantes
 
-1. Empêcher la création de plusieurs paiements simultanés pour un même compte.
+1. Valider le parcours paiement → abonnement → résiliation dans un environnement Stripe de test.
 2. Stripe : 7,90 € pour les échéances jusqu’au 31 décembre 2026, puis 9,90 € au premier renouvellement en 2027 (Europe/Paris), résiliation à tout moment et accès jusqu’à la fin de la période payée.
 3. Ajouter l’administration sécurisée et les informations légales réelles avant l’ouverture commerciale.
 4. Compléter Google Auth Platform et son passage au public avant d’ouvrir l’inscription à tous.
@@ -65,3 +65,15 @@ Les fonctions Checkout, webhook et portail Stripe sont déployées. Les variable
 L’espace personnel affiche « Factures et moyen de paiement » dès qu’un compte Stripe existe. La résiliation utilise `POST /api/billing/cancel`, avec session Neon vérifiée et contrôle de propriété côté serveur. Après confirmation, un abonnement ordinaire est résilié en fin de période ; un calendrier tarifaire est réduit à sa phase actuelle, terminée à la fin de la période payée, avec `end_behavior: cancel`. Aucun crédit utilisé n’est réinitialisé. Les mises à jour Stripe relisent l’abonnement courant pour éviter qu’un événement ancien annule la résiliation enregistrée.
 
 Vérifications automatisées : abonnements ordinaires et programmés, conservation des réglages de facturation, confirmation répétée, origine, identité du client, erreurs Stripe/base et événements retardés. Un test complet dans un environnement Stripe de test reste nécessaire avant de considérer les parcours de paiement et résiliation validés de bout en bout. Aucun paiement réel n’est effectué pour ces tests.
+
+## Protection contre les doubles abonnements
+
+Appliquer `db/migrations/2026-10-08-checkout-attempts.sql` avant de déployer cette version. Cette migration ajoute une table technique, avec une tentative de paiement unique par compte et RLS activée sans politique publique. Elle ne modifie ni les quotas ni les abonnements existants.
+
+Le serveur conserve les paramètres de la tentative (prix, client ou e-mail, expiration et identifiant aléatoire) dans Neon. Les demandes simultanées utilisent la même clé d’idempotence Stripe et les mêmes paramètres. Une page ouverte est réutilisée ; un paiement terminé ou encore en confirmation bloque la création d’une nouvelle page. Chaque page expire après une heure. Une tentative expirée sans identifiant de session est rapprochée de la liste Stripe avant d’être remplacée, y compris après l’expiration du cache d’idempotence Stripe. Une réconciliation indisponible bloque le nouveau paiement.
+
+Le webhook ne remplace un abonnement précédent que si Stripe confirme qu’il est terminé. La mise à jour utilise une comparaison atomique de l’identifiant précédent ; un conflit retourne une erreur afin d’être visible dans les livraisons webhook Stripe, sans écraser l’abonnement enregistré.
+
+`npm test` vérifie notamment les requêtes concurrentes et les SQL réels avec PostgreSQL embarqué (PGlite, dépendance de développement uniquement), les réponses Stripe et Neon perdues, les paiements asynchrones, les sessions expirées, les événements simultanés et le passage tarifaire à 2027. Stripe reste simulé dans ces tests.
+
+Avant l’ouverture commerciale, confirmer le régime de TVA et le traitement TTC des tarifs ; `automatic_tax` n’est pas activé par cette correction.

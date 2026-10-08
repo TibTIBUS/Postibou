@@ -34,7 +34,8 @@ test('verifies paid checkout, schedules the 2027 price change, and records entit
   const sql = async (strings, ...values) => {
     const query = strings.join('?'); queries.push({ query, values });
     if (query.includes('INSERT INTO public.postibou_stripe_events')) return [{ event_id: event.id }];
-    if (query.includes('SELECT user_id FROM public.postibou_entitlements WHERE user_id')) return [{ user_id: userId }];
+    if (query.includes('FROM public.postibou_entitlements WHERE user_id')) return [{ user_id: userId }];
+    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId}];
     return [];
   };
   const handler = createStripeWebhookHandler({ getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'whsec_test' });
@@ -61,6 +62,7 @@ test('a delayed paid-checkout event does not recreate future phases after schedu
     const query = strings.join('?'); queries.push({query, values});
     if (query.includes('INSERT INTO public.postibou_stripe_events')) return [{ event_id: event.id }];
     if (query.includes('SELECT user_id')) return [{ user_id: userId }];
+    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId}];
     return [];
   };
   const stripe = {
@@ -83,6 +85,7 @@ test('an out-of-order subscription update persists the current cancellation inst
     if (query.includes('INSERT INTO')) return [{event_id: staleEvent.id}];
     if (query.includes('SELECT user_id')) return [{user_id: userId}];
     if (query.includes("SET plan = 'monthly'")) saved = values;
+    if (query.includes("SET plan = 'monthly'")) return [{user_id: userId}];
     return [];
   };
   const stripe = { webhooks: { constructEvent: () => staleEvent }, subscriptions: { retrieve: async id => {
