@@ -2,53 +2,106 @@
   const preview = document.querySelector('.hero-art');
   if (!preview || !('IntersectionObserver' in window)) return;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (reducedMotion.matches) return;
-  let played = false;
-  const observer = new IntersectionObserver(entries => {
-    if (played || !entries.some(entry => entry.isIntersecting)) return;
-    played = true;
-    observer.disconnect();
-    if (reducedMotion.matches) return;
-    const cards = [...preview.querySelectorAll('.post')];
-    const originals = cards.map(card => ({
-      card,
-      height: card.getBoundingClientRect().height,
-      parts: [...card.querySelectorAll('p, .hashtags')].map(node => ({node, text: node.textContent, height: node.getBoundingClientRect().height}))
-    }));
-    originals.forEach(({card, height, parts}) => {
-      card.style.minHeight = `${height}px`;
-      card.classList.add('magic-writing');
-      // Keep complete text available to assistive technology during the animation.
+  const cards = [...preview.querySelectorAll('.post')];
+  if (!cards.length || reducedMotion.matches) return;
+  const snapshots = new Map();
+  const running = new Map();
+  const played = new Set();
+  const duration = 460;
+
+  // The original paragraphs stay in place: wrapping and card heights never change.
+  cards.forEach(card => {
+    const paragraphs = [...card.querySelectorAll('p, .hashtags')];
+    snapshots.set(card, paragraphs.map(node => ({node, text: node.textContent})));
+  });
+  const restore = card => {
+    const record = running.get(card);
+    record?.animations.forEach(animation => animation.cancel());
+    snapshots.get(card).forEach(({node,text}) => node.replaceChildren(document.createTextNode(text)));
+    card.querySelector('.magic-card-state')?.remove();
+    card.classList.remove('magic-preparing','magic-revealing');
+    running.delete(card);
+    replay.disabled = running.size > 0;
+  };
+  const animate = card => {
+    if (running.has(card) || reducedMotion.matches) return;
+    played.add(card);
+    const record = {animations: []};
+    running.set(card,record);
+    replay.disabled = true;
+    card.classList.add('magic-preparing');
+    const indicator = document.createElement('span');
+    indicator.className = 'magic-card-state';
+    indicator.setAttribute('aria-hidden','true');
+    indicator.textContent = '✦';
+    card.append(indicator);
+    const words = [];
+    let delay = 460;
+    snapshots.get(card).forEach(({node,text}) => {
       const accessible = document.createElement('span');
       accessible.className = 'magic-accessible';
-      accessible.textContent = parts.map(part => part.text).join('\n\n');
-      card.append(accessible);
-      parts.forEach(({node, height}) => {node.setAttribute('aria-hidden','true'); node.style.minHeight = `${height}px`; node.style.display = 'block'; node.textContent = '';});
+      accessible.textContent = text;
+      const visual = document.createElement('span');
+      visual.setAttribute('aria-hidden','true');
+      visual.className = 'magic-visual';
+      for (const token of text.match(/\S+|\s+/gu) || []) {
+        if (/^\s+$/u.test(token)) {visual.append(document.createTextNode(token));continue;}
+        const word = document.createElement('span');
+        word.className = 'magic-word';
+        word.textContent = token;
+        visual.append(word);
+        words.push({word,delay});
+        delay += 19;
+      }
+      delay += 85;
+      node.replaceChildren(accessible,visual);
     });
-    let started;
-    const finish = () => originals.forEach(({card, parts}) => {
-      parts.forEach(({node,text}) => {node.textContent = text;node.removeAttribute('aria-hidden');node.style.minHeight = '';node.style.display = '';});
-      card.querySelector('.magic-accessible')?.remove();
-      card.classList.remove('magic-writing');
-      card.style.minHeight = '';
+    try {
+      const glow = card.animate([
+        {boxShadow:'0 0 0 0 rgba(97,53,232,0)'},
+        {boxShadow:'0 0 0 3px rgba(97,53,232,.11), 0 16px 38px rgba(97,53,232,.13)',offset:.24},
+        {boxShadow:'0 8px 20px rgba(35,23,73,.02)'}
+      ],{duration:delay+duration,easing:'ease-out'});
+      record.animations.push(glow);
+      words.forEach(({word,delay}) => record.animations.push(word.animate([
+        {opacity:0,filter:'blur(3px)',transform:'translateY(3px)',color:'#6135e8'},
+        {opacity:1,filter:'blur(0)',transform:'translateY(0)',color:'#6135e8',offset:.65},
+        {opacity:1,filter:'blur(0)',transform:'translateY(0)',color:'inherit'}
+      ],{duration,delay,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'})));
+      card.classList.remove('magic-preparing');
+      card.classList.add('magic-revealing');
+      Promise.all(record.animations.map(animation => animation.finished)).then(() => {
+        if (running.get(card) === record) restore(card);
+      }).catch(() => {if (running.get(card) === record) restore(card);});
+    } catch {restore(card);}
+  };
+  const replay = document.createElement('button');
+  replay.type = 'button';
+  replay.className = 'magic-replay';
+  replay.textContent = '↻ Revoir la magie';
+  replay.setAttribute('aria-label','Revoir l’animation des exemples Facebook et Instagram');
+  const caption = preview.querySelector('.flow-caption');
+  caption.after(replay);
+  replay.addEventListener('click',() => {
+    if (reducedMotion.matches || running.size) return;
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < window.innerHeight) animate(card);
+      else {played.delete(card);observer.observe(card);}
     });
-    const tick = timestamp => {
-      started ??= timestamp;
-      const progress = Math.min(1, (timestamp - started) / 6500);
-      if (reducedMotion.matches || progress === 1) {finish();return;}
-      originals.forEach(({parts}, index) => {
-        const fraction = Math.max(0, Math.min(1, (progress - index * .08) / (1 - index * .08)));
-        let remaining = Math.floor(parts.reduce((sum,part) => sum + Array.from(part.text).length,0) * fraction);
-        parts.forEach(({node,text}) => {
-          const letters = Array.from(text);
-          const content = letters.slice(0,remaining).join('');
-          if (node.textContent !== content) node.textContent = content;
-          remaining = Math.max(0,remaining - letters.length);
-        });
-      });
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, {threshold: .1});
-  observer.observe(preview);
+  });
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || played.has(entry.target)) return;
+      observer.unobserve(entry.target);
+      animate(entry.target);
+    });
+  },{threshold:.18});
+  cards.forEach(card => observer.observe(card));
+  reducedMotion.addEventListener('change',() => {
+    if (!reducedMotion.matches) return;
+    observer.disconnect();
+    [...running.keys()].forEach(restore);
+    replay.hidden = true;
+  });
 })();

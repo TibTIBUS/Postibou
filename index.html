@@ -107,6 +107,17 @@
     .referral-panel details p{font-size:.9375rem;color:#ddd4f2;margin:13px 0 0}
     .referral-panel .text-link{color:var(--lime);display:inline-block;margin-top:8px}
     @media(max-width:720px){.referral-panel{padding:24px;border-radius:20px}.referral-top{flex-direction:column;gap:16px;margin-bottom:22px}.referral-metrics{gap:8px}.referral-metrics>div{padding:14px 12px;border-radius:14px}.referral-metrics strong{font-size:2rem}.referral-metrics span{font-size:.8125rem}.referral-share{flex-direction:column}.referral-share .button{width:100%}.referral-badge{font-size:.8125rem;padding:8px 12px}}
+
+    /* Example reveal: the full text remains accessible and keeps its natural layout. */
+    .hero-art .post{position:relative}
+    .magic-accessible{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+    .magic-word{display:inline-block;will-change:opacity,transform;vertical-align:baseline}
+    .magic-replay{display:flex;align-items:center;gap:6px;margin:-5px 0 16px auto;padding:4px 0;border:0;background:none;color:var(--violet-dark);font-size:.8125rem;font-weight:650;min-height:28px;text-transform:none;letter-spacing:0}
+    .magic-replay:hover{color:var(--ink)}
+    .magic-replay:disabled{cursor:default;opacity:.4}
+    .magic-card-state{position:absolute;top:-11px;right:18px;display:grid;place-items:center;width:26px;height:26px;background:var(--violet-dark);color:var(--lime);border-radius:50%;box-shadow:0 4px 12px #6135e830;pointer-events:none;animation:magic-glint 1.5s ease-in-out infinite}
+    @keyframes magic-glint{0%,100%{transform:scale(.9) rotate(-12deg);opacity:.7}50%{transform:scale(1.1) rotate(12deg);opacity:1}}
+    @media(prefers-reduced-motion:reduce){.magic-card-state{animation:none}.magic-word{will-change:auto}}
 </style>
 </head>
 <body>
