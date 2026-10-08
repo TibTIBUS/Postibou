@@ -30,7 +30,10 @@ function fixture({amount=790,price=launch}={}){
   invoicePayments:{list:async({invoice})=>({has_more:false,data:[{invoice,status:'paid',amount_paid:790,currency:'eur',payment:{type:'payment_intent',payment_intent:'pi_first'}}]})},
   paymentIntents:{retrieve:async()=>({status:'succeeded',customer:'cus_filleul',latest_charge:'ch_first'})},
   charges:{retrieve:async()=>({customer:'cus_filleul',paid:true,status:'succeeded',refunded:refund,amount_refunded:refund?790:0,disputed:dispute})},
-  coupons:{retrieve:async()=>({id:REFERRAL_COUPON,valid:true,percent_off:100,duration:'once',applies_to:{products:['prod_VOog5UMGZt2LCL']}})}
+  coupons:{retrieve:async(id,options)=>{
+   assert.equal(id,REFERRAL_COUPON);assert.deepEqual(options,{expand:['applies_to']});
+   return {id:REFERRAL_COUPON,valid:true,percent_off:100,duration:'once',applies_to:{products:['prod_VOog5UMGZt2LCL']}};
+  }}
  };
  invoices.set('in_renew',renew());return {stripe,invoices,renew,refunded:()=>{refund=true;},disputed:()=>{dispute=true;},loseResponse:()=>{failAfter=true;},calls:()=>invoiceCalls};
 }
