@@ -3,7 +3,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFile } from 'node:fs/promises';
 
 export const userId = '11111111-1111-4111-8111-111111111111';
-export const origin = 'https://postibou.netlify.app';
+export const origin = 'https://postibou.com';
 export const auth = async () => Response.json({ session: { id: 'test-session' }, user: { id: userId, email: 'artisan@example.fr', emailVerified: true } });
 export const request = () => new Request(origin + '/api/billing/checkout', {
   method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({acceptedTerms:true,termsVersion:TERMS_VERSION})

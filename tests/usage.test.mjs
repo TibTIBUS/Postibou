@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createUsageHandler } from '../netlify/functions/usage.mjs';
 
-const origin = 'https://postibou.netlify.app';
+const origin = 'https://postibou.com';
 const request = new Request(origin + '/api/usage', { headers: { Origin: origin, Cookie: '__Secure-neon-auth.session_token=private' } });
 
 test('initializes a verified account trial and returns the remaining quota', async () => {
