@@ -271,7 +271,15 @@
       try {
         const response = await fetch('/api/billing/checkout', {method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(20000)});
         const result = await response.json();
-        if (!response.ok || typeof result.url !== 'string' || !result.url.startsWith('https://checkout.stripe.com/')) throw new Error('Le paiement sécurisé est momentanément indisponible. Réessayez.');
+        if (!response.ok) {
+          const messages = {
+            SUBSCRIPTION_ALREADY_ACTIVE:'Un abonnement existe déjà pour votre compte. Retrouvez-le dans « Mon compte ».',
+            CHECKOUT_PAYMENT_PENDING:'Un paiement est déjà terminé ou en cours de confirmation. Consultez « Mon compte » dans quelques instants.',
+            CHECKOUT_RETRY_LATER:'La précédente page de paiement arrive à expiration. Réessayez dans une minute.'
+          };
+          throw new Error(messages[result.code] || 'Le paiement sécurisé est momentanément indisponible. Réessayez.');
+        }
+        if (typeof result.url !== 'string' || !result.url.startsWith('https://checkout.stripe.com/')) throw new Error('Le paiement sécurisé est momentanément indisponible. Réessayez.');
         location.assign(result.url);
       } catch (error) {
         $('#billing-error').textContent = error.message || 'Impossible d’ouvrir le paiement. Réessayez.';

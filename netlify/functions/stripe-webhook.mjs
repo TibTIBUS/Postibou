@@ -62,10 +62,10 @@ async function scheduleLaunchPriceChange(stripe, subscription) {
   }, { idempotencyKey: 'postibou_phase_update_' + subscription.id });
 }
 
-async function persistSubscription(sql, userId, subscription, allowReplace = false) {
+async function persistSubscription(sql, userId, subscription, previousSubscriptionId = null) {
   const customer = customerId(subscription.customer);
   const period = subscriptionPeriod(subscription);
-  await sql`
+  return await sql`
     UPDATE public.postibou_entitlements
     SET plan = 'monthly',
         stripe_customer_id = ${customer},
@@ -85,7 +85,9 @@ async function persistSubscription(sql, userId, subscription, allowReplace = fal
         END,
         updated_at = now()
     WHERE user_id = ${userId}::uuid
-      AND (${allowReplace}::boolean OR stripe_subscription_id IS NULL OR stripe_subscription_id = ${subscription.id})
+      AND (stripe_subscription_id IS NULL OR stripe_subscription_id = ${subscription.id}
+           OR stripe_subscription_id = ${previousSubscriptionId})
+    RETURNING user_id
   `;
 }
 
@@ -123,10 +125,18 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
           const subId = subscriptionId(object.subscription);
           if (!userId || !subId) throw new Error('CHECKOUT_REFERENCE_MISSING');
           const subscription = await stripe.subscriptions.retrieve(subId);
-          await scheduleLaunchPriceChange(stripe, subscription);
-          const mapped = await sql`SELECT user_id FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
+          const mapped = await sql`SELECT user_id, stripe_subscription_id FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
           if (!mapped.length) throw new Error('POSTIBOU_ACCOUNT_MISSING');
-          await persistSubscription(sql, userId, subscription, true);
+          const previousId = mapped[0].stripe_subscription_id;
+          if (previousId && previousId !== subscription.id) {
+            const previous = await stripe.subscriptions.retrieve(previousId);
+            if (!['canceled', 'incomplete_expired'].includes(previous.status)) throw new Error('SUBSCRIPTION_CONFLICT');
+          }
+          // Claim the mapping atomically before scheduling; two different completed
+          // sessions must never silently replace one another's active subscription.
+          const saved = await persistSubscription(sql, userId, subscription, previousId || null);
+          if (!saved.length) throw new Error('SUBSCRIPTION_CONFLICT');
+          await scheduleLaunchPriceChange(stripe, subscription);
         }
       } else if (['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
         const customer = customerId(object?.customer);
