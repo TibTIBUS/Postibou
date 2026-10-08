@@ -24,7 +24,7 @@ export async function getVerifiedUser(request, fetchAuth = fetch) {
 
 export function validPostibouRequest(request, method) {
   return request.method === method
-    && request.headers.get('origin') === 'https://postibou.netlify.app'
+    && request.headers.get('origin') === SITE_ORIGIN
     && request.headers.get('sec-fetch-site') !== 'cross-site';
 }
 
