@@ -8,6 +8,7 @@ import {billingDatabase,userId} from '../tests/helpers/billing-database.mjs';
 import {qualifyReferrals,referralDashboard,applyReferralMonth,settleReferralInvoice} from '../netlify/functions/lib/referrals.mjs';
 const fixtures=JSON.parse(await readFile(process.argv[2],'utf8'));
 const invoiceId=process.argv[3];
+const exhaustedMode=process.argv[4]==='exhausted';
 const ledgerPath=new URL('./referral-sandbox-ledger.json',import.meta.url);
 let previous=[];
 try{previous=JSON.parse(await readFile(ledgerPath,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
@@ -66,10 +67,17 @@ try{
   await applyReferralMonth(db.sql,stripe,current,options);await saveLedger();
   assert.equal(invoiceWrites,firstWrites,'Replay must never update the invoice again');
   let invoice=await stripe.invoices.retrieve(invoiceId,{expand:['discounts']});
-  assert.equal(invoice.amount_due,0);assert.equal(invoice.total,0);
-  if(invoice.status==='draft')invoice=await rpc('PostInvoicesInvoiceFinalize',{id:invoiceId},true);
-  assert.equal(invoice.status,'paid');assert.equal(invoice.amount_paid,0);
-  await settleReferralInvoice(db.sql,stripe,invoice);await saveLedger();
+  if(exhaustedMode){
+   assert.equal(previous.filter(r=>r.status==='used').length,2);
+   assert.equal(invoiceWrites,0);assert.equal(invoice.total,990);
+   assert.equal(invoice.discounts.length,0);
+   assert.equal(invoice.status,'paid');assert.equal(invoice.amount_paid,990);assert.equal(invoice.amount_due,0);
+  }else{
+   assert.equal(invoice.amount_due,0);assert.equal(invoice.total,0);
+   if(invoice.status==='draft')invoice=await rpc('PostInvoicesInvoiceFinalize',{id:invoiceId},true);
+   assert.equal(invoice.status,'paid');assert.equal(invoice.amount_paid,0);
+   await settleReferralInvoice(db.sql,stripe,invoice);await saveLedger();
+  }
   const counts=await referralDashboard(db.sql,userId);
   console.log(JSON.stringify({result:{invoice:invoiceId,status:invoice.status,total:invoice.total,amountPaid:invoice.amount_paid,available:counts.available,used:counts.used,scheduled:counts.scheduled,invoiceWrites,duplicateWrites:invoiceWrites-firstWrites,provider:'actual Stripe sandbox; application ledger isolated locally'}}));
  }else console.log(JSON.stringify({result:{validated:dashboard.validated,available:dashboard.available,earlyQualification:before,provider:'actual Stripe sandbox API',clock:'local injected time; Stripe clock not advanced'}}));

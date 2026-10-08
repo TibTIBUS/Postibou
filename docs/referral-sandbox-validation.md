@@ -47,3 +47,19 @@ Dans Stripe, environnement de test `acct_1UOADR9BDDs3b0Qj`, ouvre uniquement la 
 Avance exactement au **8 décembre 2026 à 07:00 UTC**, soit **08:00 à Paris**, puis attends le statut Prêt. N'avance pas une heure de plus et n'avance pas à janvier : Codex doit appliquer le second mois pendant que la nouvelle facture est encore en brouillon.
 
 Rapporte l'identifiant, le statut, le montant et la période de la nouvelle facture du parrain `cus_VP6hpwA8cEnC4p`, abonnement `sub_1UOIUW9BDDs3b0QjyHdMWBDE`. Ne finalise, ne paie et ne rembourse aucune facture ; n'applique aucun coupon et ne modifie aucun abonnement, clé, webhook ou compte réel.
+
+## Deuxième mois offert confirmé
+
+L'horloge a été avancée par l'agent Chrome au 8 décembre 2026 à 07:00 UTC. La facture `in_1UOIyF9BDDs3b0QjhqJTp6jb`, initialement en brouillon à 790 centimes, est passée à zéro par `applyReferralMonth`, puis a été finalisée payée à zéro en Stripe test. Une nouvelle tentative n'ajoute pas de remise et ne consomme aucun autre mois. Le règlement est enregistré par `settleReferralInvoice` dans le journal local : deux mois utilisés, aucun disponible, aucun réservé.
+
+Après règlement de cette facture, le seul abonnement fictif du parrain est passé au prix sandbox `price_1UOBPT9BDDs3b0QjuQEiELdj` (990 centimes), avec `proration_behavior=none`, sans déplacement des dates du cycle. Cela prépare le contrôle de la reprise de facturation après les mois gratuits. **Ce changement est manuel, en sandbox : il ne prouve pas le calendrier automatique de prix 2027 du parcours Checkout.**
+
+## Prompt suivant : reprise de la facturation
+
+Dans Stripe, uniquement l'environnement de test `acct_1UOADR9BDDs3b0Qj`, ouvre la simulation **Postibou — Parrainage : deux mois offerts**, `clock_1UOIUK9BDDs3b0Qjj8ykRgpn`.
+
+L'horloge doit être au 8 décembre 2026 à 07:00 UTC. Avance au **8 janvier 2027 à 08:00 UTC**, soit **09:00 à Paris**, et attends Prêt. Cette heure laisse le renouvellement de 07:00 se finaliser automatiquement avec la carte fictive. Il n'y a plus de mois offert à appliquer.
+
+Rapporte pour le parrain `cus_VP6hpwA8cEnC4p`, abonnement `sub_1UOIUW9BDDs3b0QjyHdMWBDE`, l'identifiant de la facture de janvier, son statut, le total, le montant payé, le montant restant et les remises affichées. Montant attendu : 9,90 €, sans coupon de parrainage. Si elle n'est pas encore payée, n'avance pas davantage et rapporte son état exact. Ne paie et ne finalise rien manuellement. Aucun autre abonnement ou réglage à modifier.
+
+Codex exécutera ensuite le script avec les arguments fixture, facture de janvier et `exhausted`. Ce mode interdit une nouvelle remise et vérifie le paiement de 990 centimes, les deux mois consommés et l'absence de remise sur la nouvelle facture.
