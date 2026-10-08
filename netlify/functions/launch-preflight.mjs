@@ -5,12 +5,24 @@ export const config = { path: '/api/launch-preflight' };
 // Temporary, owner-only, read-only verification. Never return credentials.
 export default async function handler(request) {
   const reply = (body, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' } });
-  if (request.method !== 'GET') return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
+  if (!['GET', 'POST'].includes(request.method)) return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
+  if (request.method === 'POST' && request.headers.get('origin') !== 'https://postibou.netlify.app') return reply({ code: 'NOT_FOUND' }, 404);
   if (Date.now() > Date.parse('2026-10-10T00:00:00Z') || request.headers.get('sec-fetch-site') === 'cross-site') return reply({ code: 'NOT_FOUND' }, 404);
   try {
     const user = await getVerifiedUser(request);
     if (user?.email?.toLowerCase() !== 'marie.thibaut2105@gmail.com') return reply({ code: 'NOT_FOUND' }, 404);
     const stripe = await createStripeClient();
+    if (request.method === 'POST') {
+      // No customer, subscription, invoice or payment is created. Immediately
+      // expire this unshared session after checking the runtime write permission.
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription', line_items: [{ price: 'price_1UO13LEnc0W23lgnnIpKJi4k', quantity: 1 }],
+        success_url: 'https://postibou.netlify.app/', cancel_url: 'https://postibou.netlify.app/',
+        metadata: { postibou_check: 'unpaid_runtime_preflight' }
+      });
+      const expired = await stripe.checkout.sessions.expire(session.id);
+      return reply({ checkoutWriteVerified: true, liveMode: session.livemode, sessionExpired: expired.status === 'expired', paymentStatus: expired.payment_status });
+    }
     const [launch, standard, coupon] = await Promise.all([
       stripe.prices.retrieve('price_1UO13LEnc0W23lgnnIpKJi4k'),
       stripe.prices.retrieve('price_1UO13LEnc0W23lgnTxtNXNW6'),
