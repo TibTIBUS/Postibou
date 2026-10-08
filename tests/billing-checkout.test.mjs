@@ -174,9 +174,9 @@ test('paid checkout can replace a confirmed terminal subscription, while its old
   assert.equal((await database.db.query('SELECT stripe_subscription_id FROM postibou_entitlements')).rows[0].stripe_subscription_id,'sub_new');
 });
 
-test('production default keeps paid checkout closed without touching billing data or Stripe', async () => {
+test('explicit launch suspension keeps checkout closed without touching billing data or Stripe', async () => {
   let databaseCalled = false, stripeCalled = false;
-  const handler = createCheckoutHandler({fetchAuth:auth,getDatabase:()=>{databaseCalled=true;throw new Error('unexpected')},getStripe:()=>{stripeCalled=true;throw new Error('unexpected')}});
+  const handler = createCheckoutHandler({paidLaunchReady:false,fetchAuth:auth,getDatabase:()=>{databaseCalled=true;throw new Error('unexpected')},getStripe:()=>{stripeCalled=true;throw new Error('unexpected')}});
   const response = await handler(request());
   assert.equal(response.status,409);
   assert.equal((await response.json()).code,'PAID_LAUNCH_PENDING');
