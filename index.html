@@ -88,15 +88,15 @@
 
     <section class="view" id="view-connexion" aria-label="Connexion"><div class="auth-layout"><div class="panel"><div class="auth-tabs" role="tablist" aria-label="Accès au compte"><button role="tab" aria-selected="true" data-auth-tab="signup">Créer un compte</button><button role="tab" aria-selected="false" data-auth-tab="login">Se connecter</button></div><h1 id="auth-title">Bienvenue chez Postibou.</h1><p class="muted" id="auth-description">Créez votre compte avec votre e-mail. L’outil est encore en démonstration.</p><button class="button secondary full" id="google-button" disabled><span class="google-letter" aria-hidden="true">G</span>Continuer avec Google</button><div class="separator">avec votre e-mail</div><form id="auth-form"><div class="form-field"><label for="email">Votre e-mail</label><input id="email" name="email" type="email" maxlength="254" placeholder="vous@entreprise.fr" autocomplete="email" required></div><div class="form-field" id="otp-field" hidden><label for="otp">Code reçu par e-mail</label><input id="otp" name="otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="123456"></div><div class="form-field" id="password-field"><label for="password" id="password-label">Votre mot de passe</label><input id="password" name="password" type="password" minlength="8" maxlength="128" placeholder="8 caractères minimum" autocomplete="new-password" required></div><button class="button primary full" id="auth-submit" type="submit">Créer mon compte</button></form><button class="text-link" id="forgot-password" hidden>Mot de passe oublié ?</button><button class="text-link" id="resend-code" hidden>Renvoyer un code</button><button class="text-link" id="auth-back" hidden>Revenir à la connexion</button><p class="inline-error" id="auth-message" role="status" aria-live="polite"></p><p class="auth-bottom">Par e-mail, un code vérifie votre adresse. Avec Google, votre compte Google confirme votre identité. Aucun paiement à cette étape.</p><a class="text-link" href="#outil" style="display:block;text-align:center;margin-top:12px">Découvrir la démonstration sans compte</a></div></div></section>
 
-    <section class="view wrap workspace" id="view-compte" aria-label="Mon compte"><div class="workspace-head"><div><h1>Mon compte</h1><p>Bienvenue dans votre espace personnel.</p></div><button class="button secondary small" id="logout-button">Se déconnecter</button></div><div class="account-grid"><article class="panel"><h2>Votre connexion</h2><div class="account-row"><span class="muted">Adresse e-mail</span><strong id="account-email" style="overflow-wrap:anywhere">Vérification en cours…</strong></div><div class="account-row"><span class="muted">Vérification</span><span class="status trial" id="account-verified">En cours</span></div><p class="muted" style="margin-top:24px">Votre compte est prêt. Retrouvez-le à chaque connexion.</p></article><article class="panel"><h2>Votre essai gratuit</h2><p class="muted">Votre essai dure 7 jours et comprend 10 adaptations. Chaque adaptation produit un texte Facebook et un texte Instagram. Vos textes ne sont pas conservés par Postibou.</p><p class="muted">L’abonnement et les paiements seront activés dans une prochaine étape.</p><a class="button primary" href="#outil">Adapter mon premier texte</a></article></div></section>
+    <section class="view wrap workspace" id="view-compte" aria-label="Mon compte"><div class="workspace-head"><div><h1>Mon compte</h1><p>Bienvenue dans votre espace personnel.</p></div><button class="button secondary small" id="logout-button">Se déconnecter</button></div><div class="account-grid"><article class="panel"><h2>Votre connexion</h2><div class="account-row"><span class="muted">Adresse e-mail</span><strong id="account-email" style="overflow-wrap:anywhere">Vérification en cours…</strong></div><div class="account-row"><span class="muted">Vérification</span><span class="status trial" id="account-verified">En cours</span></div><p class="muted" style="margin-top:24px">Votre compte est prêt. Retrouvez-le à chaque connexion.</p></article><article class="panel"><h2 id="account-plan-title">Votre essai gratuit</h2><div class="account-row"><span class="muted">État</span><span class="status trial" id="account-plan-status">Chargement…</span></div><p class="credit-number"><span id="account-credits">10</span><span class="muted" style="font-size:1rem;font-weight:400;letter-spacing:0"> adaptations disponibles</span></p><p class="muted" id="account-plan-summary">7 jours gratuits · 10 adaptations incluses.</p><div class="account-row" id="account-period-row" hidden><span class="muted">Fin de période payée</span><strong id="account-period-end">—</strong></div><p class="muted" id="account-cancel-notice" hidden>Votre abonnement est résilié et restera accessible jusqu’à la fin de la période payée.</p><a class="button primary" id="account-subscribe" href="#abonnement">Découvrir l’abonnement</a><button class="button secondary" id="manage-billing" hidden>Gérer mon abonnement</button><a class="button secondary" href="#outil" style="margin-left:8px">Adapter un texte</a></article></div></section>
 
-    <section class="view wrap" id="view-abonnement" aria-label="Abonnement"><div class="subscribe-layout"><a class="text-link" href="#compte">Revenir à mon compte</a><h1 style="margin-top:20px">Continuez à partager<br>votre savoir-faire.</h1><div class="pricing"><div class="price-card"><span class="pill accent-pill" data-launch-label>Offre de lancement · 2026</span><div class="price"><strong data-current-price>7,90 €</strong><span>/ mois</span></div><div class="price-terms" data-price-terms>7,90 € pour les échéances jusqu’au 31 décembre 2026.<br>Puis 9,90 € / mois, automatiquement dès votre premier renouvellement en 2027.</div><ul class="price-list"><li><span class="check">✓</span>30 adaptations chaque mois</li><li><span class="check">✓</span>Deux publications par adaptation</li><li><span class="check">✓</span>Sans engagement, résiliable à tout moment</li></ul></div></div><label class="billing-label"><input type="checkbox" id="billing-consent"><span>J’ai lu le tarif et les conditions de renouvellement. Je comprends que l’abonnement est renouvelé chaque mois jusqu’à sa résiliation.</span></label><button class="button primary full" id="checkout-button" disabled>Passer au paiement sécurisé</button><div class="demo-notice" style="margin-top:20px;margin-bottom:0"><strong>Paiement non activé</strong><span>Ce parcours est un aperçu. Aucune carte ne sera demandée et aucun paiement ne sera effectué.</span></div></div></section>
+    <section class="view wrap" id="view-abonnement" aria-label="Abonnement"><div class="subscribe-layout"><a class="text-link" href="#compte">Revenir à mon compte</a><h1 style="margin-top:20px">Continuez à partager<br>votre savoir-faire.</h1><div class="pricing"><div class="price-card"><span class="pill accent-pill" data-launch-label>Offre de lancement · 2026</span><div class="price"><strong data-current-price>7,90 €</strong><span>/ mois</span></div><div class="price-terms" data-price-terms>7,90 € pour les échéances jusqu’au 31 décembre 2026.<br>Puis 9,90 € / mois, automatiquement dès votre premier renouvellement en 2027.</div><ul class="price-list"><li><span class="check">✓</span>30 adaptations chaque mois</li><li><span class="check">✓</span>Deux publications par adaptation</li><li><span class="check">✓</span>Sans engagement, résiliable à tout moment</li></ul></div></div><label class="billing-label"><input type="checkbox" id="billing-consent"><span>J’ai lu le tarif et les conditions de renouvellement. Je comprends que l’abonnement est renouvelé chaque mois jusqu’à sa résiliation.</span></label><button class="button primary full" id="checkout-button" disabled>Passer au paiement sécurisé</button><p class="fine" style="margin-top:14px">Paiement sécurisé par Stripe. Votre essai Postibou est séparé et ne demande aucune carte bancaire.</p><p class="inline-error" id="billing-error" role="alert"></p></div></section>
 
     <section class="view wrap workspace" id="view-administration" aria-label="Aperçu administration"><div class="workspace-head"><div><span class="eyebrow muted">POSTIBOU / ADMINISTRATION</span><h1 style="margin-top:10px">L’activité, en un regard.</h1><p>Les comptes, les abonnements et la consommation de crédits.</p></div><a class="button secondary small" href="#accueil">Revenir au site</a></div><div class="demo-notice"><strong>Données fictives</strong><span>Ce tableau illustre l’espace administrateur. Aucun utilisateur réel et aucune donnée personnelle ne sont présents.</span></div><div class="admin-metrics"><article class="metric"><p>Comptes</p><strong>4</strong><small>Exemples de profils</small></article><article class="metric"><p>Essais en cours</p><strong>1</strong><small>10 crédits par essai</small></article><article class="metric"><p>Abonnements actifs</p><strong>2</strong><small>30 crédits par mois</small></article><article class="metric"><p>Crédits utilisés</p><strong>31</strong><small>Périodes d’exemple</small></article></div><section class="panel"><div class="admin-toolbar"><h2>Utilisateurs</h2><div class="filters" aria-label="Filtrer les comptes"><button data-filter="all" aria-pressed="true">Tous</button><button data-filter="trial" aria-pressed="false">Essais</button><button data-filter="active" aria-pressed="false">Abonnés</button></div></div><div class="table-wrap"><table><thead><tr><th scope="col">Compte</th><th scope="col">État</th><th scope="col">Crédits utilisés</th><th scope="col">Tarif mensuel</th></tr></thead><tbody id="admin-rows"></tbody></table></div></section><p class="fine" style="margin-top:18px">L’accès administrateur devra être protégé côté serveur avant toute mise en service.</p></section>
 
     <section class="view wrap legal-layout" id="view-informations" aria-label="Informations de préversion"><span class="eyebrow muted">PRÉVERSION</span><h1 style="margin-top:16px">Informations et confidentialité</h1><p>Les comptes par e-mail et Google utilisent Neon Auth. Les générations envoient le texte saisi à OpenRouter pour produire les versions Facebook et Instagram.</p><h2>Vos informations</h2><p>Neon Auth conserve votre compte et une empreinte de votre mot de passe. Un cookie sécurisé, inaccessible au JavaScript, conserve votre session. Postibou enregistre la date de début de l’essai et le nombre d’adaptations, sans conserver vos textes ni les publications générées. Le texte et le ton choisis sont transmis à OpenRouter pour la génération. Les modalités de conservation du fournisseur s’appliquent également. Ne saisissez pas d’informations confidentielles sur vos clients.</p><h2>Avant l’ouverture du service</h2><p>Les mentions légales, les coordonnées de l’éditeur, les conditions d’utilisation et d’abonnement, les informations complètes sur le traitement des données et la facturation devront être complétées avec les informations réelles du service.</p><h2>Les tarifs prévus</h2><p>7,90 € par mois pour les échéances jusqu’au 31 décembre 2026 inclus, puis 9,90 € à compter du premier renouvellement en 2027. Essai de sept jours avec dix adaptations, sans carte bancaire. Abonnement mensuel sans engagement, avec trente adaptations.</p><a class="button secondary" href="#accueil">Revenir à l’accueil</a></section>
   </main>
-  <footer class="footer"><div class="wrap"><div class="footer-inner"><a class="logo" href="#accueil" style="font-size:1.25rem">postibou<span class="brand-dot">.</span></a><div class="footer-links"><a href="#informations">Informations & confidentialité</a><a href="#administration">Aperçu administration</a><a href="#outil">Démonstration</a></div></div><p class="footer-note">Préversion de Postibou · Comptes e-mail et Google · Abonnements en préparation.</p></div></footer>
+  <footer class="footer"><div class="wrap"><div class="footer-inner"><a class="logo" href="#accueil" style="font-size:1.25rem">postibou<span class="brand-dot">.</span></a><div class="footer-links"><a href="#informations">Informations & confidentialité</a><a href="#administration">Aperçu administration</a><a href="#outil">Démonstration</a></div></div><p class="footer-note">Postibou · 7 jours gratuits, puis un abonnement mensuel résiliable à tout moment.</p></div></footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     'use strict';
@@ -111,7 +111,7 @@
         instagram: 'Votre prochaine terrasse commence par une idée. 🌿\n\nCette terrasse en bois est terminée. Merci à nos clients pour leur confiance !\n\nUn projet pour votre extérieur ? Parlons-en en message privé.\n\n#TerrasseBois #ProjetTerrasse #AménagementExtérieur #Artisan'
       }
     };
-    const state = { credits: 10, outputs: null, busy: false, quotaReady: false, quotaError: false, authMode: 'signup', route: 'accueil' };
+    const state = { credits: 10, plan: 'trial', quota: 10, usage: null, outputs: null, busy: false, quotaReady: false, quotaError: false, authMode: 'signup', route: 'accueil' };
     const $ = selector => document.querySelector(selector);
     const $$ = selector => [...document.querySelectorAll(selector)];
     let toastTimer;
@@ -130,12 +130,35 @@
       else window.scrollTo({top:0,behavior:'instant'});
     }
     function updateQuota() {
-      if (state.user && !state.quotaReady) $('#quota-text').textContent = state.quotaError ? 'Impossible de vérifier votre essai. Rechargez la page.' : 'Chargement de votre essai…';
-      else if (state.user) $('#quota-text').textContent = state.credits + ' adaptation' + (state.credits === 1 ? '' : 's') + ' restante' + (state.credits === 1 ? '' : 's') + ' sur votre essai de 7 jours';
+      const planName = state.plan === 'monthly' ? 'abonnement' : 'essai de 7 jours';
+      if (state.user && !state.quotaReady) $('#quota-text').textContent = state.quotaError ? 'Impossible de vérifier vos crédits. Rechargez la page.' : 'Chargement de vos crédits…';
+      else if (state.user) $('#quota-text').textContent = state.credits + ' adaptation' + (state.credits === 1 ? '' : 's') + ' restante' + (state.credits === 1 ? '' : 's') + ' sur votre ' + planName;
       else $('#quota-text').textContent = state.credits + ' crédits de démonstration disponibles';
       $('#generate-button').disabled = state.busy || state.credits === 0 || (state.user && !state.quotaReady);
-      $('#generate-button').textContent = state.user && state.quotaError ? 'Essai indisponible' : state.user && state.credits === 0 ? 'Essai terminé ou crédits épuisés' : 'Adapter mon texte';
+      $('#generate-button').textContent = state.user && state.quotaError ? 'Crédits indisponibles' : state.user && state.credits === 0 ? 'Crédits épuisés' : 'Adapter mon texte';
     }
+    window.setPostibouUsage = usage => {
+      state.usage = usage;
+      state.plan = usage.plan || 'trial';
+      state.quota = Number(usage.quota) || (state.plan === 'monthly' ? 30 : 10);
+      state.credits = Number(usage.creditsRemaining) || 0;
+      const subscribed = state.plan === 'monthly';
+      $('#account-plan-title').textContent = subscribed ? 'Votre abonnement' : 'Votre essai gratuit';
+      const status = usage.subscriptionStatus || (usage.active ? 'trial' : 'expired');
+      const statusLabel = {active:'Abonnement actif',past_due:'Paiement à vérifier',canceled:'Abonnement terminé',unpaid:'Paiement en attente',trial:'Essai en cours',expired:'Essai terminé'}[status] || (usage.active ? 'Actif' : 'Inactif');
+      $('#account-plan-status').textContent = statusLabel;
+      $('#account-plan-status').className = 'status ' + (usage.active ? '' : 'expired');
+      $('#account-credits').textContent = state.credits;
+      $('#account-plan-summary').textContent = subscribed
+        ? '30 adaptations par période de facturation. Votre abonnement est mensuel et résiliable à tout moment.'
+        : '7 jours gratuits · 10 adaptations incluses. Ensuite, choisissez si vous souhaitez vous abonner.';
+      $('#account-period-row').hidden = !usage.subscriptionPeriodEnd;
+      if (usage.subscriptionPeriodEnd) $('#account-period-end').textContent = new Intl.DateTimeFormat('fr-FR',{dateStyle:'long'}).format(new Date(usage.subscriptionPeriodEnd));
+      $('#account-cancel-notice').hidden = !usage.cancelAtPeriodEnd;
+      $('#account-subscribe').hidden = subscribed && usage.active;
+      $('#manage-billing').hidden = !usage.hasBilling;
+      updateQuota();
+    };
     function showError(message) { $('#adapt-error').textContent = message; $('#adapt-error').style.display = 'block'; }
     function renderResults(outputs) {
       ['facebook', 'instagram'].forEach(network => {
@@ -153,7 +176,7 @@
       if (!['warm', 'commercial'].includes(tone)) throw new Error('Choisissez l’un des deux tons proposés.');
       if (!state.user && state.credits === 0) throw new Error('Vous avez utilisé les crédits de démonstration. Créez un compte pour démarrer votre essai gratuit.');
       if (!state.user && normalized !== EXAMPLE) throw new Error('Connectez-vous pour adapter votre propre texte. La démonstration sans compte utilise uniquement le texte d’exemple.');
-      if (state.user && (!state.quotaReady || state.credits === 0)) throw new Error('Votre essai est terminé ou vos crédits sont épuisés.');
+      if (state.user && (!state.quotaReady || state.credits === 0)) throw new Error(state.plan === 'monthly' ? 'Vos crédits sont épuisés pour cette période, ou votre abonnement n’est plus actif.' : 'Votre essai est terminé ou vos crédits sont épuisés.');
       state.busy = true;
       $('#adapt-error').style.display = 'none';
       $('#generate-button').disabled = true;
@@ -164,11 +187,12 @@
           const response = await fetch('/api/adapt', {method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:normalized,tone}),signal:AbortSignal.timeout(50000)});
           const result = await response.json();
           if (!response.ok) {
-            const messages = {UNAUTHORIZED:'Reconnectez-vous pour adapter ce texte.',TRIAL_EXPIRED:'Votre essai de 7 jours est terminé.',QUOTA_EXHAUSTED:'Vos 10 adaptations d’essai sont utilisées.',SERVICE_UNAVAILABLE:'Le service est momentanément indisponible. Aucun crédit n’a été utilisé.',GENERATION_FAILED:'La génération a échoué. Aucun crédit n’a été utilisé.',INVALID_INPUT:'Vérifiez votre texte et le ton choisi.'};
+            const messages = {UNAUTHORIZED:'Reconnectez-vous pour adapter ce texte.',TRIAL_EXPIRED:'Votre essai de 7 jours est terminé.',SUBSCRIPTION_INACTIVE:'Votre abonnement n’est pas actif. Vérifiez votre compte ou souscrivez.',QUOTA_EXHAUSTED:'Vous avez utilisé toutes les adaptations de votre période.',SERVICE_UNAVAILABLE:'Le service est momentanément indisponible. Aucun crédit n’a été utilisé.',GENERATION_FAILED:'La génération a échoué. Aucun crédit n’a été utilisé.',INVALID_INPUT:'Vérifiez votre texte et le ton choisi.'};
             if (response.status === 429) { state.credits = 0; state.quotaReady = true; updateQuota(); }
             throw new Error(messages[result.code] || 'La génération n’a pas abouti. Réessayez dans un instant.');
           }
           state.outputs = {facebook:result.facebook,instagram:result.instagram};
+          state.plan = result.plan || state.plan;
           state.credits = result.creditsRemaining;
           state.quotaReady = true;
         } else {
@@ -178,7 +202,7 @@
         }
         renderResults(state.outputs);
         updateQuota();
-        return {mode:state.user?'trial':'demo',creditsRemaining:state.credits,...state.outputs};
+        return {mode:state.user?state.plan:'demo',creditsRemaining:state.credits,...state.outputs};
       } finally {
         state.busy = false;
         $('#results').setAttribute('aria-busy', 'false');
@@ -237,7 +261,32 @@
     $$('[data-auth-tab]').forEach(button => button.addEventListener('click', () => setAuthMode(button.dataset.authTab)));
     $('.auth-tabs').addEventListener('keydown', event => {if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();setAuthMode(state.authMode==='signup'?'login':'signup');$('[data-auth-tab="'+state.authMode+'"]').focus();});
     $('#billing-consent').addEventListener('change', () => $('#checkout-button').disabled = !$('#billing-consent').checked);
-    $('#checkout-button').addEventListener('click', () => notify('Le paiement n’est pas encore activé. Aucun abonnement n’a été créé.'));
+    $('#checkout-button').addEventListener('click', async () => {
+      const button = $('#checkout-button');
+      if (!state.user) { location.hash = '#connexion'; navigate('connexion'); configureAuthForm('login'); authMessage('Connectez-vous pour souscrire.'); return; }
+      if (!$('#billing-consent').checked || button.disabled) return;
+      button.disabled = true; button.textContent = 'Ouverture du paiement sécurisé…'; $('#billing-error').textContent = '';
+      try {
+        const response = await fetch('/api/billing/checkout', {method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(20000)});
+        const result = await response.json();
+        if (!response.ok || typeof result.url !== 'string' || !result.url.startsWith('https://checkout.stripe.com/')) throw new Error('Le paiement sécurisé est momentanément indisponible. Réessayez.');
+        location.assign(result.url);
+      } catch (error) {
+        $('#billing-error').textContent = error.message || 'Impossible d’ouvrir le paiement. Réessayez.';
+        button.disabled = !$('#billing-consent').checked;
+        button.textContent = 'Passer au paiement sécurisé';
+      }
+    });
+    $('#manage-billing').addEventListener('click', async () => {
+      const button = $('#manage-billing'); button.disabled = true;
+      try {
+        const response = await fetch('/api/billing/portal', {method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(20000)});
+        const result = await response.json();
+        if (!response.ok || typeof result.url !== 'string' || !result.url.startsWith('https://billing.stripe.com/')) throw new Error('Impossible d’ouvrir la gestion de votre abonnement. Réessayez.');
+        location.assign(result.url);
+      } catch (error) { notify(error.message || 'La gestion de votre abonnement est momentanément indisponible.'); }
+      finally { button.disabled = false; }
+    });
     $$('[data-filter]').forEach(button => button.addEventListener('click', () => {$$('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));renderAdmin(button.dataset.filter);}));
     updateCount();updateQuota();updatePricing();renderAdmin();
     // Agent actions mirror the visible demonstration. No account, billing or private-data actions are exposed.
@@ -257,3 +306,4 @@
 <script src="/auth.js"></script>
 </body>
 </html>
+

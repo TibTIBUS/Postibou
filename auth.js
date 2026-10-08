@@ -68,7 +68,7 @@ async function authRequest(action, body) {
 }
 function renderSession(user) {
   state.user = user;
-  if (!user) { state.credits = 10; state.quotaReady = false; state.quotaError = false; }
+  if (!user) { state.credits = 10; state.plan = 'trial'; state.quota = 10; state.usage = null; state.quotaReady = false; state.quotaError = false; }
   const nav = $('.nav-actions .login-link');
   nav.textContent = user ? 'Mon compte' : 'Se connecter';
   nav.href = user ? '#compte' : '#connexion';
@@ -90,8 +90,12 @@ async function refreshSession(guard = false) {
         const usage = await response.json();
         if (!response.ok) throw new Error('Usage unavailable');
         state.credits = Number(usage.creditsRemaining) || 0;
+        state.plan = usage.plan || 'trial';
+        state.quota = Number(usage.quota) || (state.plan === 'monthly' ? 30 : 10);
+        state.usage = usage;
         state.quotaReady = true;
         state.quotaError = false;
+        window.setPostibouUsage?.(usage);
       } catch { state.credits = 0; state.quotaReady = false; state.quotaError = true; }
       updateQuota();
     } else updateQuota();
@@ -206,3 +210,4 @@ refreshSession().finally(() => {
     authMessage('La connexion Google n’a pas abouti. Réessayez, ou connectez-vous par e-mail.');
   } else navigate(location.hash.slice(1));
 });
+
