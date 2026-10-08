@@ -4,7 +4,7 @@ import { createCheckoutHandler } from '../netlify/functions/billing-checkout.mjs
 import { createPortalHandler } from '../netlify/functions/billing-portal.mjs';
 import { TERMS_VERSION } from '../netlify/functions/legal-policy.mjs';
 
-const origin = 'https://postibou.netlify.app';
+const origin = 'https://postibou.com';
 const user = { id: '11111111-1111-4111-8111-111111111111', email: 'artisan@example.fr' };
 const auth = async () => Response.json({ session: { id: 's1' }, user: { ...user, emailVerified: true } });
 

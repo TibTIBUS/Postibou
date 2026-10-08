@@ -9,14 +9,14 @@ test('public email-only auth session loads referral counters and private confirm
  const fetch=async url=>{requests.push(url);let body;
  if(url==='/api/auth/session')body={user:{email:'owner@example.test',emailVerified:true}};
  else if(url==='/api/usage')body={plan:'trial',creditsRemaining:10,quota:10,hasBilling:true};
- else if(url==='/api/referrals')body={link:'https://postibou.netlify.app/?parrain=AAAAAAAAAAAAAAAA#connexion',pending:2,validated:3,available:1,used:1,scheduled:1};
+ else if(url==='/api/referrals')body={link:'https://postibou.com/?parrain=AAAAAAAAAAAAAAAA#connexion',pending:2,validated:3,available:1,used:1,scheduled:1};
  else if(url==='/api/billing/confirmations')body={confirmations:[{id:'11111111-1111-4111-8111-111111111111',paidAt:'2026-10-08T12:00:00Z',emailStatus:'sent'}]};
  else throw Error('unexpected request '+url);
  if(requests.includes('/api/referrals')&&requests.includes('/api/billing/confirmations'))queueMicrotask(done);
  return Response.json(body);
  };
  const state={route:'compte',user:null};
- const context=vm.createContext({$, $$:selector=>selector==='[data-referral-badge]'?[]:[$(selector)],state,fetch,Response,AbortSignal,URL,URLSearchParams,Intl,Date,JSON,Error,Number,String,Boolean,location:{search:'',hash:'#compte',href:'https://postibou.netlify.app/#compte'},history:{replaceState(){}},sessionStorage:{getItem:()=>null,removeItem(){},setItem(){}},window:{addEventListener(){}},document:{addEventListener(){},createElement:element},navigator:{},notify(){},updateQuota(){},navigate(route){state.route=route;}});
+ const context=vm.createContext({$, $$:selector=>selector==='[data-referral-badge]'?[]:[$(selector)],state,fetch,Response,AbortSignal,URL,URLSearchParams,Intl,Date,JSON,Error,Number,String,Boolean,location:{search:'',hash:'#compte',href:'https://postibou.com/#compte'},history:{replaceState(){}},sessionStorage:{getItem:()=>null,removeItem(){},setItem(){}},window:{addEventListener(){}},document:{addEventListener(){},createElement:element},navigator:{},notify(){},updateQuota(){},navigate(route){state.route=route;}});
  vm.runInContext(await readFile(new URL('../auth.js',import.meta.url),'utf8'),context);
  await Promise.race([panelsLoaded,new Promise((_,reject)=>setTimeout(()=>reject(Error('account panels were not loaded')),1000))]);
  await new Promise(resolve=>setImmediate(resolve));

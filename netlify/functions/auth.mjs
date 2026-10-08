@@ -1,6 +1,6 @@
 // Public Neon endpoint; no database password or administrative key is needed.
 export const AUTH_URL = 'https://ep-cool-base-b1xdts2i.neonauth.c-5.eu-central-1.aws.neon.tech/neondb/auth';
-export const SITE_ORIGIN = 'https://postibou.netlify.app';
+export const SITE_ORIGIN = 'https://postibou.com';
 export const config = { path: '/api/auth/*' };
 const COOKIE_PREFIX = '__Secure-neon-auth';
 const routes = {

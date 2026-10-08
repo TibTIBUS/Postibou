@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createBillingSyncHandler} from '../netlify/functions/billing-sync.mjs';
-const origin='https://postibou.netlify.app';
+const origin='https://postibou.com';
 const req=()=>new Request(origin+'/api/billing/sync',{method:'POST',headers:{Origin:origin},body:JSON.stringify({session:'foreign',user:'foreign',paid:true})});
 function fixture(changes={}) {
   let fulfilled=0,retrieved=[];

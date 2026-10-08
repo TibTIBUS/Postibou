@@ -15,7 +15,7 @@ export async function referralDashboard(sql, userId) {
     FROM public.postibou_referrals r WHERE referrer_id=${userId}::uuid`;
   const [spent] = await sql`SELECT count(*) FILTER (WHERE status='used')::int AS used, count(*) FILTER (WHERE status IN ('reserved','applied','review'))::int AS scheduled FROM public.postibou_referral_redemptions WHERE referrer_id=${userId}::uuid`;
   const [own] = await sql`SELECT status FROM public.postibou_referrals WHERE referee_id=${userId}::uuid`;
-  return { code:code.code, link:'https://postibou.netlify.app/?parrain='+code.code+'#connexion', ...counts, ...spent, attributed:Boolean(own), attributionStatus:own?.status || null };
+  return { code:code.code, link:'https://postibou.com/?parrain='+code.code+'#connexion', ...counts, ...spent, attributed:Boolean(own), attributionStatus:own?.status || null };
 }
 
 export async function claimReferral(sql, userId, code) {
