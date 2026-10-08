@@ -30,4 +30,8 @@ UNION ALL
 SELECT 'confirmation_delivery_to_review', count(*)
 FROM public.postibou_contract_confirmations
 WHERE email_status='needs_review'
-  OR (email_status IN ('pending','sending') AND created_at < now() - interval '1 day');
+  OR (email_status IN ('pending','sending') AND created_at < now() - interval '1 day')
+UNION ALL
+SELECT 'unpaid_referrals_to_review', count(*) FROM public.postibou_referrals WHERE status='linked' AND created_at<now()-interval '12 months'
+UNION ALL
+SELECT 'referral_redemptions_to_review', count(*) FROM public.postibou_referral_redemptions WHERE status='review';

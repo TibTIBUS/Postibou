@@ -77,3 +77,7 @@ Le webhook ne remplace un abonnement précédent que si Stripe confirme qu’il 
 `npm test` vérifie notamment les requêtes concurrentes et les SQL réels avec PostgreSQL embarqué (PGlite, dépendance de développement uniquement), les réponses Stripe et Neon perdues, les paiements asynchrones, les sessions expirées, les événements simultanés et le passage tarifaire à 2027. Stripe reste simulé dans ces tests.
 
 Avant l’ouverture commerciale, confirmer le régime de TVA et le traitement TTC des tarifs ; `automatic_tax` n’est pas activé par cette correction.
+
+## Parrainage
+
+Le compte propose un lien personnel, les compteurs et des badges. Un premier paiement du filleul vérifié après quatorze jours donne un mois offert au parrain, cumulable et utilisable sur une prochaine facture mensuelle avec les trente adaptations habituelles. Appliquer `db/migrations/2026-10-08-referrals.sql` avant déploiement. Configuration du coupon, événements webhook, droits de la clé Stripe, tests et procédures : [programme de parrainage](docs/referral-program.md). La souscription publique reste fermée.

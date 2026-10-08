@@ -68,7 +68,7 @@ async function authRequest(action, body) {
 }
 function renderSession(user) {
   state.user = user;
-  if (!user) { $('#account-confirmations').hidden = true; $('#confirmation-list').replaceChildren(); state.credits = 10; state.plan = 'trial'; state.quota = 10; state.usage = null; state.quotaReady = false; state.quotaError = false; }
+  if (!user) { clearReferralView(); $('#account-confirmations').hidden = true; $('#confirmation-list').replaceChildren(); state.credits = 10; state.plan = 'trial'; state.quota = 10; state.usage = null; state.quotaReady = false; state.quotaError = false; }
   const nav = $('.nav-actions .login-link');
   nav.textContent = user ? 'Mon compte' : 'Se connecter';
   nav.href = user ? '#compte' : '#connexion';
@@ -98,7 +98,7 @@ async function refreshSession(guard = false) {
         window.setPostibouUsage?.(usage);
       } catch { state.credits = 0; state.quotaReady = false; state.quotaError = true; }
       updateQuota();
-      if (state.route === 'compte') refreshContractConfirmations();
+      if (state.route === 'compte') { refreshContractConfirmations(); refreshReferrals(); }
     } else updateQuota();
     if (guard && !result.user && state.route === 'compte') {
       history.replaceState(null, '', '#connexion');
@@ -252,3 +252,41 @@ async function refreshContractConfirmations() {
   }
 }
 $('#refresh-confirmations').addEventListener('click', refreshContractConfirmations);
+
+let referralCheck=0,referralLink='';
+// The visitor may voluntarily keep this invitation in sessionStorage for
+// the Google return. No tracking cookie, localStorage or contact import.
+const receivedReferral=new URLSearchParams(location.search).get('parrain');
+let invitationCode=/^[A-F0-9]{16}$/.test(receivedReferral||'')?receivedReferral:null;
+try { const saved=JSON.parse(sessionStorage.getItem('postibou-invitation')||'null');if(!invitationCode&&/^[A-F0-9]{16}$/.test(saved?.code||'')&&Date.now()-saved.at<7*86400000)invitationCode=saved.code; } catch {}
+if(invitationCode) $('#signup-referral-invitation').hidden=false;
+$('#remember-referral').addEventListener('change',event=>{try{if(event.target.checked&&invitationCode)sessionStorage.setItem('postibou-invitation',JSON.stringify({code:invitationCode,at:Date.now()}));else sessionStorage.removeItem('postibou-invitation');}catch{notify('Votre navigateur ne peut pas conserver cette invitation. Gardez votre lien pour le rouvrir après connexion.');}});
+function clearReferralView(){
+ referralCheck++;referralLink='';$('#referral-link').value='';$('#copy-referral').disabled=true;$('#share-referral').disabled=true;
+ for(const name of ['pending','validated','available'])$('#referral-'+name).textContent='—';
+ $('#referral-savings').textContent='';$('#referral-message').textContent='';$('#account-referral-invitation').hidden=true;
+ $('#referral-progress').value=0;$$('[data-referral-badge]').forEach(el=>el.classList.remove('earned'));
+}
+async function refreshReferrals(){
+ const check=++referralCheck,user=state.user?.id;if(!user||state.route!=='compte')return;
+ try{
+  const response=await fetch('/api/referrals',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
+  const data=await response.json();if(check!==referralCheck||state.user?.id!==user||state.route!=='compte')return;
+  if(!response.ok)throw Error('unavailable');
+  referralLink=data.link;$('#referral-link').value=referralLink;$('#copy-referral').disabled=false;$('#share-referral').disabled=false;
+  for(const name of ['pending','validated','available'])$('#referral-'+name).textContent=Number(data[name])||0;
+  const n=Number(data.validated)||0,goal=[1,3,5].find(g=>n<g)||Math.ceil((n+1)/5)*5;
+  $('#referral-progress').max=goal;$('#referral-progress').value=n;$('#referral-progress').setAttribute('aria-valuetext',n+' parrainages validés sur '+goal);
+  $('#referral-motivation').textContent=n===0?'Votre premier parrainage peut vous offrir votre prochain mois.':n>=5?'Vous avez déjà '+n+' parrainages validés. Chaque nouveau client abonné peut vous offrir un mois de plus.':'Déjà '+n+' parrainage'+(n>1?'s':'')+' validé'+(n>1?'s':'')+' ! Encore '+(goal-n)+' pour votre prochain badge.';
+  $$('[data-referral-badge]').forEach(el=>{const earned=n>=Number(el.dataset.referralBadge);el.classList.toggle('earned',earned);el.setAttribute('aria-label',el.textContent+(earned?' — obtenu':' — à débloquer'));});
+  $('#referral-savings').textContent=(Number(data.used)||0)+' mois déjà utilisé'+(data.used>1?'s':'')+' · '+(Number(data.scheduled)||0)+' réservé'+(data.scheduled>1?'s':'')+' pour une échéance.';
+  $('#referral-message').textContent=data.attributed?'Votre parrainage a été enregistré. Les récompenses sont attribuées au parrain après validation.':'';
+  $('#account-referral-invitation').hidden=!invitationCode||data.attributed;
+ }catch{if(check===referralCheck&&state.user?.id===user)$('#referral-message').textContent='Le parrainage est momentanément indisponible. Revenez dans quelques instants.';}
+}
+$('#copy-referral').addEventListener('click',async()=>{if(!referralLink)return;try{await navigator.clipboard.writeText(referralLink);notify('Votre lien est copié. Partagez-le avec la personne de votre choix.');}catch{$('#referral-link').select();notify('Sélectionnez et copiez votre lien.');}});
+$('#share-referral').addEventListener('click',async()=>{if(!referralLink)return;if(!navigator.share){$('#copy-referral').click();return;}try{await navigator.share({title:'Découvrez Postibou',text:'Préparez vos textes Facebook et Instagram avec Postibou. Voici mon lien de parrainage :',url:referralLink});}catch{}});
+$('#claim-account-referral').addEventListener('click',async()=>{
+ if(!invitationCode||!state.user)return;const button=$('#claim-account-referral');button.disabled=true;
+ try{const response=await fetch('/api/referrals',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:invitationCode,accepted:true}),signal:AbortSignal.timeout(15000)});const data=await response.json();if(!response.ok)throw Error(data.code==='REFERRAL_ALREADY_ASSIGNED'?'Un parrain est déjà associé à votre compte.':'Ce lien ne peut pas être activé sur votre compte. Le parrainage concerne un nouveau compte, avant sa première souscription.');invitationCode=null;try{sessionStorage.removeItem('postibou-invitation');}catch{}const url=new URL(location.href);url.searchParams.delete('parrain');history.replaceState(null,'',url.pathname+url.search+url.hash);$('#signup-referral-invitation').hidden=true;await refreshReferrals();notify('Votre parrainage est enregistré.');}catch(error){$('#referral-message').textContent=error.message||'Le parrainage est momentanément indisponible.';}finally{button.disabled=false;}
+});
