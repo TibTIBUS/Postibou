@@ -55,6 +55,58 @@
     @media(max-width:720px){.hero h1{font-size:clamp(2.3rem,8vw,3.1rem)}.editor-grid{grid-template-columns:1fr}.workspace-head{align-items:start}.workspace-actions{justify-content:start}.workspace-head h1{font-size:1.9rem}.brand-symbol{width:35px;height:35px;font-size:1.3rem}.tone:has(input:checked){padding:10px}.field-footer{flex-wrap:wrap}.mini-tag{max-width:115px;text-align:right}.hero-art{padding:20px}.button.small{min-height:44px}}
     @media(max-width:360px){.wrap{padding-inline:16px}.tones{grid-template-columns:1fr}.hero-actions{flex-direction:column}.hero-actions .button{width:100%}.post{padding:16px}.mini-tag{display:none}.account-row{align-items:start;flex-wrap:wrap}.account-row .muted{max-width:100%}.nav-actions .button{padding-inline:10px}.panel{padding:18px}.tone{padding:11px}.tone:has(input:checked){padding:10px}}
       .generation-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.generation-actions .button{padding-inline:12px;font-size:.9375rem}.button.magic{background:var(--ink);color:#fff;border-color:var(--violet)}.button.magic:hover{background:#5328c9}.magic-description{font-size:.8125rem;line-height:1.6;color:var(--muted);margin:12px 0 0}.magic-description strong{color:var(--ink)}@media(max-width:950px){.generation-actions{grid-template-columns:1fr}}
+
+    /* Parrainage : carte sombre, accents citron, badges et progression. */
+    .referral-panel{position:relative;overflow:hidden;background:var(--ink);color:#fff;border:0;border-radius:28px;padding:40px;box-shadow:0 18px 50px #23174922}
+    .referral-panel:before{content:"";position:absolute;right:-90px;top:-110px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,#6135e866,#6135e800 68%);pointer-events:none}
+    .referral-panel>*{position:relative}
+    .referral-panel h2{font-size:clamp(1.6rem,3vw,2.3rem);line-height:1.14;margin:12px 0 10px;color:#fff}
+    .referral-panel .eyebrow{color:var(--lime)}
+    .referral-panel .muted,.referral-panel .fine{color:#ddd4f2}
+    .referral-panel a:focus-visible,.referral-panel button:focus-visible,.referral-panel input:focus-visible,.referral-panel summary:focus-visible{outline-color:var(--lime)}
+    .referral-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:28px}
+    .referral-top p{margin:0;max-width:460px}
+    .referral-reward{flex:none;display:inline-flex;align-items:center;padding:10px 16px;border-radius:30px;background:var(--lime);color:var(--ink);font-size:.875rem;font-weight:750;white-space:nowrap}
+    .referral-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+    .referral-metrics>div{padding:20px 22px;border:1px solid #69568c;border-radius:18px;background:#352457}
+    .referral-metrics strong{display:block;font-size:2.7rem;line-height:1;letter-spacing:-.05em;font-weight:750;color:#fff}
+    .referral-metrics>div:nth-child(2) strong{color:var(--lime)}
+    .referral-metrics span{display:block;margin-top:9px;font-size:.875rem;color:#ddd4f2}
+    #referral-savings{font-size:.875rem;margin:0 0 26px}
+    #referral-savings:empty{display:none}
+    .referral-panel label[for="referral-link"]{display:block;font-weight:750;margin-bottom:10px}
+    .referral-share{display:flex;gap:10px;align-items:stretch}
+    .referral-share input{flex:1;min-width:0;min-height:52px;padding:0 16px;border:1px solid #69568c;border-radius:12px;background:#2b1d4b;color:#fff;font-size:.9375rem;text-overflow:ellipsis}
+    .referral-share input::placeholder{color:#a99cc7}
+    .referral-share .button{min-height:52px;white-space:nowrap}
+    .button.lime{background:var(--lime);color:var(--ink)}
+    .button.lime:hover{background:#e2ff7e}
+    .referral-panel .button.secondary{border-color:#69568c;color:#fff}
+    .referral-panel .button.secondary:hover{background:#352457}
+    #referral-motivation{font-weight:650;font-size:1.0625rem;margin-bottom:14px}
+    #referral-progress{display:block;width:100%;height:10px;border:0;border-radius:10px;overflow:hidden;appearance:none;-webkit-appearance:none;background:#352457}
+    #referral-progress::-webkit-progress-bar{background:#352457;border-radius:10px}
+    #referral-progress::-webkit-progress-value{background:var(--lime);border-radius:10px;transition:width .3s}
+    #referral-progress::-moz-progress-bar{background:var(--lime);border-radius:10px}
+    .referral-badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    .referral-badge{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:1px dashed #8a78ad;border-radius:30px;font-size:.875rem;font-weight:650;color:#c9bfe0}
+    .referral-badge:before{content:"🔒";font-size:.8125rem;opacity:.8}
+    .referral-badge.earned{border:1px solid var(--lime);background:var(--lime);color:var(--ink)}
+    .referral-badge.earned:before{content:"✓";font-weight:800;opacity:1}
+    #referral-message{font-size:.9375rem;margin:18px 0 0}
+    #referral-message:empty{display:none}
+    .referral-invitation{display:grid;gap:10px;padding:16px 18px;margin:0 0 20px;border:1px solid #d8c9f9;border-radius:14px;background:var(--wash);color:var(--ink);font-size:.9375rem}
+    .referral-invitation p{margin:0}
+    .referral-invitation label{display:flex;gap:10px;align-items:flex-start;font-size:.875rem;line-height:1.5}
+    .referral-invitation input[type=checkbox]{margin-top:3px;accent-color:var(--violet-dark)}
+    .referral-invitation a{text-decoration:underline;text-underline-offset:3px}
+    .referral-invitation .button{justify-self:start}
+    .referral-panel .referral-invitation{margin:26px 0 0}
+    .referral-panel details{margin-top:28px;padding-top:22px;border-top:1px solid #4a3a73}
+    .referral-panel summary{cursor:pointer;font-weight:650;line-height:1.5}
+    .referral-panel details p{font-size:.9375rem;color:#ddd4f2;margin:13px 0 0}
+    .referral-panel .text-link{color:var(--lime);display:inline-block;margin-top:8px}
+    @media(max-width:720px){.referral-panel{padding:24px;border-radius:20px}.referral-top{flex-direction:column;gap:16px;margin-bottom:22px}.referral-metrics{gap:8px}.referral-metrics>div{padding:14px 12px;border-radius:14px}.referral-metrics strong{font-size:2rem}.referral-metrics span{font-size:.8125rem}.referral-share{flex-direction:column}.referral-share .button{width:100%}.referral-badge{font-size:.8125rem;padding:8px 12px}}
 </style>
 </head>
 <body>
