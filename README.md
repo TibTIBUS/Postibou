@@ -14,18 +14,18 @@ Le domaine autorisé est `https://postibou.netlify.app`. En cas de changement de
 
 Après une inscription, Neon conserve l’essai de sept jours et ses dix adaptations dans `public.postibou_entitlements`. Une ligne liée à l’identifiant Neon Auth contient seulement le début et la fin de l’essai ainsi que le compteur. Les réservations techniques ne contiennent aucun texte. Les publications ne sont pas conservées par Postibou.
 
-La fonction `netlify/functions/adapt.mjs` vérifie la session Neon et l’adresse vérifiée avant de réserver un crédit. Elle envoie le texte et le ton à OpenRouter, valide la réponse structurée Facebook/Instagram, puis marque la réservation terminée. Si la génération échoue, elle rembourse le crédit. Le texte n’est pas écrit dans Neon. Le modèle par défaut est `google/gemini-3.1-flash-lite` ; le fournisseur et le modèle peuvent évoluer.
+La fonction `netlify/functions/adapt.mjs` vérifie la session Neon et l’adresse vérifiée avant de réserver un crédit. Elle envoie le texte et le ton à OpenRouter, valide la réponse structurée Facebook/Instagram, puis marque la réservation terminée. Si la génération échoue, elle rembourse le crédit. Le texte n’est pas écrit dans Neon. Le modèle par défaut est `openai/gpt-6-luna` ; le fournisseur et le modèle peuvent évoluer.
 
 Avant la première génération, configurer les variables d’environnement Netlify avec le scope **Functions** : `OPENROUTER_API_KEY` et `DATABASE_URL` (URL de connexion Neon pour la branche `production`, SSL activé). Les secrets ne sont pas dans le dépôt ni `netlify.toml`. Modifier une variable nécessite un nouveau déploiement.
 
-Les essais se créent lors de l’inscription quand la base est configurée ; le premier accès authentifié initialise aussi l’essai pour les comptes déjà créés. L’espace personnel et l’administration restent partiellement démonstratifs. Les abonnements mensuels Stripe et les quotas abonnés ne sont pas activés.
+Les essais se créent lors de l’inscription quand la base est configurée ; le premier accès authentifié initialise aussi l’essai pour les comptes déjà créés. L’espace personnel utilise les données du compte. L’administration reste démonstrative. Les abonnements mensuels Stripe et les quotas abonnés sont reliés aux fonctions serveur.
 
 ## Architecture
 
 - GitHub : code, dépôt `TibTIBUS/Postibou`.
 - Netlify : interface et fonctions serveur, projet `postibou`, équipe Localia.
 - Neon + Neon Auth : projet `Postibou` (`fragrant-sound-24707274`), offre gratuite, AWS Francfort, branche `production` (`br-shiny-fog-b1oz5ggz`).
-- Stripe : abonnements à connecter ultérieurement.
+- Stripe : Checkout, portail client et webhooks pour les abonnements.
 
 ## Vérification
 
@@ -43,9 +43,9 @@ Tests serveur : origine, méthodes, validation, filtrage des cookies et champs, 
 
 ## Étapes suivantes
 
-1. Ajouter les deux secrets Netlify et tester une adaptation réelle.
+1. Empêcher la création de plusieurs paiements simultanés pour un même compte.
 2. Stripe : 7,90 € pour les échéances jusqu’au 31 décembre 2026, puis 9,90 € au premier renouvellement en 2027 (Europe/Paris), résiliation à tout moment et accès jusqu’à la fin de la période payée.
-3. Ajouter le quota de trente adaptations par période d’abonnement, l’administration sécurisée et les informations légales réelles avant l’ouverture commerciale.
+3. Ajouter l’administration sécurisée et les informations légales réelles avant l’ouverture commerciale.
 4. Compléter Google Auth Platform et son passage au public avant d’ouvrir l’inscription à tous.
 
 Les secrets futurs doivent rester côté serveur, jamais dans le dépôt public. Identité : violet électrique `#6135e8`, citron vert `#d6ff44`, encre `#231749`.
@@ -58,16 +58,10 @@ Aucun secret Google n’est dans Netlify ou GitHub : les identifiants ont été 
 
 Le client Google Postibou se trouve dans le projet Google existant Localia Partners. L’écran de consentement est commun aux clients de ce projet ; sa séparation dans un projet dédié pourra être effectuée ultérieurement.
 
+## Gestion de l’abonnement
 
-## Stripe subscriptions
+Les fonctions Checkout, webhook et portail Stripe sont déployées. Les variables `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` restent dans Netlify, portée Functions. Le quota abonné est de trente adaptations par période payée.
 
-Checkout is initiated by the authenticated Postibou server. The Stripe product and monthly prices are configured in the Stripe account; the launch price is used before 1 January 2027, then the standard price is used. For launch-price subscriptions, the webhook attaches a subscription schedule that keeps the launch price through the last billing date in 2026 and changes to the standard price at the first billing date in 2027.
+L’espace personnel affiche « Factures et moyen de paiement » dès qu’un compte Stripe existe. La résiliation utilise `POST /api/billing/cancel`, avec session Neon vérifiée et contrôle de propriété côté serveur. Après confirmation, un abonnement ordinaire est résilié en fin de période ; un calendrier tarifaire est réduit à sa phase actuelle, terminée à la fin de la période payée, avec `end_behavior: cancel`. Aucun crédit utilisé n’est réinitialisé. Les mises à jour Stripe relisent l’abonnement courant pour éviter qu’un événement ancien annule la résiliation enregistrée.
 
-Before enabling billing in Netlify, configure these server-only variables for Functions and production:
-
-- `STRIPE_SECRET_KEY`: a restricted Stripe API key with the permissions required for Checkout Sessions, subscriptions, schedules, and customer portal sessions.
-- `STRIPE_WEBHOOK_SECRET`: the signing secret for the webhook endpoint.
-
-Configure the Stripe webhook endpoint as `https://postibou.netlify.app/api/stripe/webhook` for `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, and `invoice.payment_failed`. Enable customer self-service cancellation at period end in the Stripe Customer Portal.
-
-Apply the additive Neon schema in `db/migrations/2026-10-07-stripe-billing.sql` before deploying these functions. The Checkout Session does not enable automatic tax; verify the business VAT/tax configuration before changing that setting.
+Vérifications automatisées : abonnements ordinaires et programmés, conservation des réglages de facturation, confirmation répétée, origine, identité du client, erreurs Stripe/base et événements retardés. Un test complet dans un environnement Stripe de test reste nécessaire avant de considérer les parcours de paiement et résiliation validés de bout en bout. Aucun paiement réel n’est effectué pour ces tests.

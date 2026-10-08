@@ -38,6 +38,7 @@ function monthsUntilLaunchPriceEnds(periodEnd) {
 }
 
 async function scheduleLaunchPriceChange(stripe, subscription) {
+  if (subscription.cancel_at_period_end || subscription.cancel_at || subscription.status !== 'active') return;
   const item = subscription.items?.data?.[0];
   const priceId = typeof item?.price === 'string' ? item.price : item?.price?.id;
   if (priceId !== launchPrice) return;
@@ -50,13 +51,13 @@ async function scheduleLaunchPriceChange(stripe, subscription) {
       { idempotencyKey: 'postibou_schedule_' + subscription.id }
     );
   const start = schedule.current_phase?.start_date || period.start;
-  const iterations = monthsUntilLaunchPriceEnds(period.end);
+  const intervalCount = monthsUntilLaunchPriceEnds(period.end);
   await stripe.subscriptionSchedules.update(schedule.id, {
     end_behavior: 'release',
     proration_behavior: 'none',
     phases: [
-      { start_date: start, iterations, items: [{ price: launchPrice, quantity: 1 }], proration_behavior: 'none' },
-      { items: [{ price: standardPrice, quantity: 1 }], proration_behavior: 'none' }
+      { start_date: start, duration: { interval: 'month', interval_count: intervalCount }, items: [{ price: launchPrice, quantity: 1 }], proration_behavior: 'none' },
+      { duration: { interval: 'month', interval_count: 1 }, items: [{ price: standardPrice, quantity: 1 }], proration_behavior: 'none' }
     ]
   }, { idempotencyKey: 'postibou_phase_update_' + subscription.id });
 }
@@ -72,7 +73,7 @@ async function persistSubscription(sql, userId, subscription, allowReplace = fal
         stripe_subscription_status = ${subscription.status},
         subscription_period_start = CASE WHEN ${period.start}::bigint IS NULL THEN NULL ELSE to_timestamp(${period.start}::bigint) END,
         subscription_period_end = CASE WHEN ${period.end}::bigint IS NULL THEN NULL ELSE to_timestamp(${period.end}::bigint) END,
-        cancel_at_period_end = ${Boolean(subscription.cancel_at_period_end)},
+        cancel_at_period_end = ${Boolean(subscription.cancel_at_period_end || subscription.cancel_at)},
         adaptations_used = CASE
           WHEN subscription_period_start IS DISTINCT FROM CASE WHEN ${period.start}::bigint IS NULL THEN NULL ELSE to_timestamp(${period.start}::bigint) END THEN 0
           ELSE adaptations_used
@@ -130,7 +131,13 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
       } else if (['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
         const customer = customerId(object?.customer);
         const rows = customer ? await sql`SELECT user_id FROM public.postibou_entitlements WHERE stripe_customer_id = ${customer}` : [];
-        if (rows[0]?.user_id) await persistSubscription(sql, rows[0].user_id, object);
+        if (rows[0]?.user_id) {
+          // Stripe can deliver events out of order. Persist today's state so an older
+          // update cannot undo a cancellation already confirmed by the customer.
+          const subscription = event.type === 'customer.subscription.deleted'
+            ? object : await stripe.subscriptions.retrieve(object.id);
+          await persistSubscription(sql, rows[0].user_id, subscription);
+        }
       } else if (['invoice.paid', 'invoice.payment_failed'].includes(event.type)) {
         const customer = customerId(object?.customer);
         const subId = subscriptionId(object?.subscription || object?.parent?.subscription_details?.subscription);

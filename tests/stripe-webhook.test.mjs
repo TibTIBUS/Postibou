@@ -44,9 +44,52 @@ test('verifies paid checkout, schedules the 2027 price change, and records entit
   const update = calls.find(call => call[0] === 'schedule-update');
   assert.ok(update);
   assert.equal(update[2].end_behavior, 'release');
-  assert.equal(update[2].phases[0].iterations, 3);
+  assert.deepEqual(update[2].phases[0].duration, { interval: 'month', interval_count: 3 });
+  assert.equal('iterations' in update[2].phases[0], false);
   assert.equal(update[2].phases[1].items[0].price, 'price_1UO13LEnc0W23lgnTxtNXNW6');
   assert.equal(update[2].phases[0].proration_behavior, 'none');
   assert.ok(queries.some(({ query }) => query.includes("SET plan = 'monthly'")));
   assert.ok(queries.some(({ query }) => query.includes("SET status = 'processed'")));
+});
+
+test('a delayed paid-checkout event does not recreate future phases after scheduled cancellation', async () => {
+  let scheduled = false;
+  const queries = [];
+  const subscription = { id: 'sub_123', customer: 'cus_123', status: 'active', cancel_at: 1794052800,
+    cancel_at_period_end: false, schedule: 'sched_1', items: { data: [{ price: { id: 'price_1UO13LEnc0W23lgnnIpKJi4k' }, current_period_start: 1791374400, current_period_end: 1794052800 }] } };
+  const sql = async (strings, ...values) => {
+    const query = strings.join('?'); queries.push({query, values});
+    if (query.includes('INSERT INTO public.postibou_stripe_events')) return [{ event_id: event.id }];
+    if (query.includes('SELECT user_id')) return [{ user_id: userId }];
+    return [];
+  };
+  const stripe = {
+    webhooks: { constructEvent: () => event }, subscriptions: { retrieve: async () => subscription },
+    subscriptionSchedules: { retrieve: async () => { scheduled = true; throw new Error('must not schedule'); } }
+  };
+  const response = await createStripeWebhookHandler({ getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'test' })(request());
+  assert.equal(response.status, 200);
+  assert.equal(scheduled, false);
+  const persisted = queries.find(({query}) => query.includes("SET plan = 'monthly'"));
+  assert.equal(persisted.values[7], true);
+});
+
+test('an out-of-order subscription update persists the current cancellation instead of stale event fields', async () => {
+  const staleEvent = { id: 'evt_stale', type: 'customer.subscription.updated', data: { object: { id: 'sub_123', customer: 'cus_123', cancel_at: null, cancel_at_period_end: false } } };
+  let retrieved = false;
+  let saved;
+  const sql = async (strings, ...values) => {
+    const query = strings.join('?');
+    if (query.includes('INSERT INTO')) return [{event_id: staleEvent.id}];
+    if (query.includes('SELECT user_id')) return [{user_id: userId}];
+    if (query.includes("SET plan = 'monthly'")) saved = values;
+    return [];
+  };
+  const stripe = { webhooks: { constructEvent: () => staleEvent }, subscriptions: { retrieve: async id => {
+    retrieved = true; assert.equal(id, 'sub_123');
+    return { id, customer: 'cus_123', status: 'active', cancel_at: 1794052800, items: { data: [{ current_period_start: 1791374400, current_period_end: 1794052800 }] } };
+  } } };
+  assert.equal((await createStripeWebhookHandler({ getStripe: () => stripe, getDatabase: () => sql, getWebhookSecret: () => 'test' })(request())).status, 200);
+  assert.equal(retrieved, true);
+  assert.equal(saved[7], true);
 });
