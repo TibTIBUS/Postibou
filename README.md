@@ -2,7 +2,7 @@
 
 Interface française pour transformer le texte d’un artisan en publications Facebook et Instagram.
 
-Site : https://postibou.netlify.app/ — déploiement automatique de `main` sur Netlify.
+Site : https://postibou.com/ — déploiement automatique de `main` sur Netlify.
 
 ## Comptes et essai gratuit
 
@@ -10,7 +10,7 @@ Inscription e-mail/mot de passe, vérification par code e-mail, connexion, déco
 
 Le serveur `netlify/functions/auth.mjs` limite les opérations autorisées, contrôle l’origine des requêtes et valide les sessions auprès de Neon. Il relaie uniquement les cookies Neon, avec `HttpOnly`, `Secure`, `SameSite=Lax`, sans domaine tiers. Les jetons ne sont pas exposés en JSON ni conservés dans localStorage. Les réponses ne sont jamais mises en cache. Le fournisseur assure le stockage des empreintes de mots de passe et les protections de son service d’authentification.
 
-Le domaine autorisé est `https://postibou.netlify.app`. En cas de changement de domaine, mettre à jour `SITE_ORIGIN` et les domaines autorisés dans Neon. L’URL publique Neon figure dans le code ; elle n’est pas un secret. Aucun mot de passe de base de données ou clé administrative n’est nécessaire à cette étape.
+Le domaine autorisé est `https://postibou.com`. En cas de changement de domaine, mettre à jour `SITE_ORIGIN` et les domaines autorisés dans Neon. L’URL publique Neon figure dans le code ; elle n’est pas un secret. Aucun mot de passe de base de données ou clé administrative n’est nécessaire à cette étape.
 
 Après une inscription, Neon conserve l’essai de sept jours et ses dix adaptations dans `public.postibou_entitlements`. Une ligne liée à l’identifiant Neon Auth contient seulement le début et la fin de l’essai ainsi que le compteur. Les réservations techniques ne contiennent aucun texte. Les publications ne sont pas conservées par Postibou.
 

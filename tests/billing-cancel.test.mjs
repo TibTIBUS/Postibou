@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCancellationHandler } from '../netlify/functions/billing-cancel.mjs';
 
-const origin = 'https://postibou.netlify.app';
+const origin = 'https://postibou.com';
 const userId = '11111111-1111-4111-8111-111111111111';
 const end = 1794052800;
 const start = 1791374400;

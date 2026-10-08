@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAdaptHandler } from '../netlify/functions/adapt.mjs';
 
-const origin = 'https://postibou.netlify.app';
+const origin = 'https://postibou.com';
 const sessionFetch = async () => Response.json({ session: { id: 's1' }, user: { id: '11111111-1111-4111-8111-111111111111', emailVerified: true } });
 
 function makeDatabase(initialUsed = 0) {
