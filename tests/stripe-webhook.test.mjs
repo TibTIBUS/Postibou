@@ -10,7 +10,7 @@ const event = {
 };
 
 function request() {
-  return new Request('https://postibou.netlify.app/api/stripe/webhook', {
+  return new Request('https://postibou.com/api/stripe/webhook', {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 'test-signature' }, body: JSON.stringify(event)
   });
 }
@@ -105,7 +105,7 @@ test('missing or forged Stripe signature is rejected before database access', as
   const handler = createStripeWebhookHandler({confirmPurchase:async()=>{},referralPurchase:async()=>{},referralSettlement:async()=>{},getStripe:()=>stripe,getWebhookSecret:()=> 'whsec_synthetic_only',getDatabase:()=>{databaseCalled=true;throw new Error('unexpected')}});
   for(const signature of [null,'t=0,v1=invalid']) {
     const headers={'Content-Type':'application/json'};if(signature)headers['Stripe-Signature']=signature;
-    const response=await handler(new Request('https://postibou.netlify.app/api/stripe/webhook',{method:'POST',headers,body:JSON.stringify(event)}));
+    const response=await handler(new Request('https://postibou.com/api/stripe/webhook',{method:'POST',headers,body:JSON.stringify(event)}));
     assert.equal(response.status,400);assert.equal((await response.json()).code,'INVALID_SIGNATURE');
   }
   assert.equal(databaseCalled,false);

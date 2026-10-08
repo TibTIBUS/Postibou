@@ -69,7 +69,7 @@ export function contractEmailPayload(receipt, from) {
   return {
     from: `Postibou <${from}>`, to: [receipt.recipient_email], reply_to: 'gestion.localia@gmail.com',
     subject: 'Postibou — Confirmation de votre abonnement',
-    text: `Bonjour,\n\nVoici la confirmation de votre abonnement Postibou. Votre récapitulatif et la copie exacte des conditions acceptées, avec le formulaire de rétractation, sont joints à ce message. Conservez ces fichiers. Vous pouvez aussi retrouver la confirmation dans « Mon compte ».\n\n${receipt.confirmation_document.split('----- CONDITIONS ACCEPTÉES -----')[0]}\nVotre espace : https://postibou.netlify.app/#compte\n\nPour toute question : gestion.localia@gmail.com\nL’équipe Postibou`,
+    text: `Bonjour,\n\nVoici la confirmation de votre abonnement Postibou. Votre récapitulatif et la copie exacte des conditions acceptées, avec le formulaire de rétractation, sont joints à ce message. Conservez ces fichiers. Vous pouvez aussi retrouver la confirmation dans « Mon compte ».\n\n${receipt.confirmation_document.split('----- CONDITIONS ACCEPTÉES -----')[0]}\nVotre espace : https://postibou.com/#compte\n\nPour toute question : gestion.localia@gmail.com\nL’équipe Postibou`,
     attachments: [
       { filename: 'postibou-confirmation.txt', content: Buffer.from(receipt.confirmation_document).toString('base64') },
       { filename: 'postibou-conditions-acceptees.txt', content: Buffer.from(receipt.terms_document).toString('base64') }
