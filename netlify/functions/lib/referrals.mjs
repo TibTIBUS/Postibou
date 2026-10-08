@@ -84,17 +84,17 @@ export async function qualifyReferrals(sql, stripe, {referrerId=null,now=()=>Dat
   return checked;
 }
 
-function renewalLine(invoice) {
+function renewalLine(invoice,allowedPrices=prices) {
   const lines=invoice.lines;
   if(invoice.billing_reason!=='subscription_cycle' || invoice.currency!=='eur' || invoice.collection_method!=='charge_automatically' || lines?.has_more || lines?.data?.length!==1 || Number(lines.total_count || 1)!==1 || (invoice.starting_balance || 0)!==0) return null;
   const line=lines.data[0];
   const seconds=line.period?.end-line.period?.start;
-  if(line.quantity!==1 || !prices.has(id(line.price || line.pricing?.price_details?.price)) || !Number.isFinite(seconds) || seconds<27*86400 || seconds>32*86400 || line.proration || line.parent?.subscription_item_details?.proration) return null;
+  if(line.quantity!==1 || !allowedPrices.has(id(line.price || line.pricing?.price_details?.price)) || !Number.isFinite(seconds) || seconds<27*86400 || seconds>32*86400 || line.proration || line.parent?.subscription_item_details?.proration) return null;
   return line;
 }
 const ownCoupon=invoice=>invoice.discounts?.some(d=>typeof d==='object'&&id(d.coupon || d.source?.coupon)===REFERRAL_COUPON);
 
-export async function applyReferralMonth(sql,stripe,object,{now=()=>Date.now()}={}) {
+export async function applyReferralMonth(sql,stripe,object,{now=()=>Date.now(),allowedPrices=prices,productId='prod_VOog5UMGZt2LCL'}={}) {
   if(object.billing_reason!=='subscription_cycle' || !subId(object)) return;
   const [owner]=await sql`SELECT user_id,stripe_subscription_id FROM public.postibou_entitlements WHERE stripe_customer_id=${id(object.customer)} AND stripe_subscription_id=${subId(object)}`;
   if(!owner) return;
@@ -102,7 +102,7 @@ export async function applyReferralMonth(sql,stripe,object,{now=()=>Date.now()}=
   if(redemption?.status==='used' || redemption?.status==='void') return;
   const invoice=await stripe.invoices.retrieve(object.id,{expand:['discounts']});
   if(invoice.id!==object.id || id(invoice.customer)!==id(object.customer) || subId(invoice)!==owner.stripe_subscription_id) throw Error('REFERRAL_INVOICE_MISMATCH');
-  const line=renewalLine(invoice);
+  const line=renewalLine(invoice,allowedPrices);
   if(!line) return;
   if(!redemption) {
     if(invoice.status!=='draft' || invoice.amount_due<=0) return;
@@ -114,7 +114,7 @@ export async function applyReferralMonth(sql,stripe,object,{now=()=>Date.now()}=
     if(!rewards[0]) return;
     if(!await paymentStillValid(stripe,rewards[0])) { await sql`UPDATE public.postibou_referrals SET status='invalid' WHERE referral_id=${rewards[0].referral_id}::uuid`;return; }
     const coupon=await stripe.coupons.retrieve(REFERRAL_COUPON,{expand:['applies_to']});
-    if(coupon.deleted || !coupon.valid || coupon.percent_off!==100 || coupon.duration!=='once' || coupon.applies_to?.products?.length!==1 || coupon.applies_to.products[0]!=='prod_VOog5UMGZt2LCL') throw Error('REFERRAL_COUPON_UNAVAILABLE');
+    if(coupon.deleted || !coupon.valid || coupon.percent_off!==100 || coupon.duration!=='once' || coupon.applies_to?.products?.length!==1 || coupon.applies_to.products[0]!==productId) throw Error('REFERRAL_COUPON_UNAVAILABLE');
     await sql`INSERT INTO public.postibou_referral_redemptions(redemption_id,referral_id,referrer_id,invoice_id,subscription_id,period_start,period_end)
       VALUES (${randomUUID()}::uuid,${rewards[0].referral_id}::uuid,${owner.user_id}::uuid,${invoice.id},${subId(invoice)},${dt(line.period.start)}::timestamptz,${dt(line.period.end)}::timestamptz) ON CONFLICT DO NOTHING`;
     [redemption]=await sql`SELECT * FROM public.postibou_referral_redemptions WHERE invoice_id=${invoice.id}`;

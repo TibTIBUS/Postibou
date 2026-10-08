@@ -77,6 +77,17 @@ for(const [amount,price] of [[790,launch],[990,standard]])test('one referral mak
  await rewards();const f=fixture({amount,price});await applyReferralMonth(database.sql,f.stripe,f.invoices.get('in_renew'),{now});assert.equal(f.invoices.get('in_renew').amount_due,0);assert.equal((await rows()).length,1);assert.equal((await referralDashboard(database.sql,userId)).scheduled,1);
  f.invoices.get('in_renew').status='paid';await settleReferralInvoice(database.sql,f.stripe,f.invoices.get('in_renew'));assert.equal((await rows())[0].status,'used');assert.equal((await referralDashboard(database.sql,userId)).used,1);
 });
+test('sandbox identifiers need explicit server-side test configuration; production defaults reject them',async()=>{
+ await rewards();const f=fixture({price:'price_sandbox_only'});
+ f.stripe.coupons.retrieve=async(id,options)=>{
+  assert.equal(id,REFERRAL_COUPON);assert.deepEqual(options,{expand:['applies_to']});
+  return {id,valid:true,percent_off:100,duration:'once',applies_to:{products:['prod_sandbox_only']}};
+ };
+ await applyReferralMonth(database.sql,f.stripe,f.invoices.get('in_renew'),{now});
+ assert.equal(f.calls(),0);assert.equal((await rows()).length,0);
+ await applyReferralMonth(database.sql,f.stripe,f.invoices.get('in_renew'),{now,allowedPrices:new Set(['price_sandbox_only']),productId:'prod_sandbox_only'});
+ assert.equal(f.calls(),1);assert.equal(f.invoices.get('in_renew').amount_due,0);
+});
 test('successive referrals offer successive months; a duplicate event never spends another month',async()=>{
  await rewards(2);const f=fixture();await applyReferralMonth(database.sql,f.stripe,f.invoices.get('in_renew'),{now});await applyReferralMonth(database.sql,f.stripe,f.invoices.get('in_renew'),{now});assert.equal(f.calls(),1);assert.equal((await referralDashboard(database.sql,userId)).available,1);
  const next={start:period.end,end:Date.parse('2027-01-08T12:00:00Z')/1000};f.invoices.set('in_next',f.renew('in_next',next));await applyReferralMonth(database.sql,f.stripe,f.invoices.get('in_next'),{now:()=>Date.parse('2026-12-08T12:00:00Z')});assert.equal((await rows()).length,2);assert.equal((await referralDashboard(database.sql,userId)).available,0);
