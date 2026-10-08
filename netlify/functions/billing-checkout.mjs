@@ -11,12 +11,12 @@ const launchEndsAt = Date.parse('2026-12-31T23:00:00.000Z');
 const terminalStatuses = new Set(['canceled', 'incomplete_expired']);
 const idOf = value => typeof value === 'string' ? value : value?.id;
 
-async function acquireAttempt(sql, user, account, timestamp, previousId = null) {
+async function acquireAttempt(sql, user, account, timestamp, previousId, prices) {
   const id = randomUUID();
   const rows = await sql`
     INSERT INTO public.postibou_checkout_attempts
       (user_id, attempt_id, price_id, customer_id, customer_email, expires_at)
-    VALUES (${user.id}::uuid, ${id}::uuid, ${timestamp < launchEndsAt ? priceLaunch : priceStandard},
+    VALUES (${user.id}::uuid, ${id}::uuid, ${timestamp < launchEndsAt ? prices.launch : prices.standard},
             ${account.stripe_customer_id || null}, ${account.stripe_customer_id ? null : user.email}, ${Math.floor(timestamp / 1000) + 3600})
     ON CONFLICT (user_id) DO UPDATE
       SET attempt_id = EXCLUDED.attempt_id, price_id = EXCLUDED.price_id,
@@ -74,7 +74,7 @@ async function recoverSession(stripe, attempt, userId) {
   throw new Error('CHECKOUT_RECONCILIATION_INCOMPLETE');
 }
 
-export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createDatabase, getStripe = createStripeClient, now = () => Date.now() } = {}) {
+export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createDatabase, getStripe = createStripeClient, now = () => Date.now(), prices = { launch: priceLaunch, standard: priceStandard } } = {}) {
   return async request => {
     if (!validPostibouRequest(request, 'POST')) return reply({ code: 'FORBIDDEN' }, 403);
     if (!(request.headers.get('content-type') || '').toLowerCase().startsWith('application/json')) return reply({ code: 'INVALID_INPUT' }, 415);
@@ -102,7 +102,7 @@ export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createD
         if (idOf(subscription.customer) !== account.stripe_customer_id) throw new Error('SUBSCRIPTION_MISMATCH');
         if (!terminalStatuses.has(subscription.status)) return reply({ code: 'SUBSCRIPTION_ALREADY_ACTIVE' }, 409);
       }
-      let attempt = await acquireAttempt(sql, user, account, now());
+      let attempt = await acquireAttempt(sql, user, account, now(), null, prices);
       for (let retry = 0; retry < 3; retry++) {
         let session;
         if (attempt.checkout_session_id) {
@@ -113,7 +113,7 @@ export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createD
           else {
             // Wait a minute past the fixed expiry, then rotate with a database CAS.
             if (Number(attempt.expires_at) * 1000 + 60000 > now()) return reply({ code: 'CHECKOUT_RETRY_LATER' }, 409);
-            attempt = await acquireAttempt(sql, user, account, now(), attempt.attempt_id);
+            attempt = await acquireAttempt(sql, user, account, now(), attempt.attempt_id, prices);
             continue;
           }
         } else {
@@ -136,7 +136,7 @@ export function createCheckoutHandler({ fetchAuth = fetch, getDatabase = createD
           if (!session.url?.startsWith('https://checkout.stripe.com/')) throw new Error('CHECKOUT_URL_UNAVAILABLE');
           return reply({ url: session.url });
         } else if (session.status !== 'expired') throw new Error('CHECKOUT_STATUS_UNAVAILABLE');
-        attempt = await acquireAttempt(sql, user, account, now(), attempt.attempt_id);
+        attempt = await acquireAttempt(sql, user, account, now(), attempt.attempt_id, prices);
       }
       return reply({ code: 'CHECKOUT_RETRY_LATER' }, 409);
     } catch {
