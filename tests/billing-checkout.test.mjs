@@ -137,7 +137,7 @@ test('an open attempt keeps its exact parameters over the 2027 tariff boundary',
 
 
 function webhookRequest(eventId, subId) {
-  return new Request('https://postibou.netlify.app/api/stripe/webhook',{method:'POST',headers:{'Stripe-Signature':'fake'},body:JSON.stringify({
+  return new Request('https://postibou.com/api/stripe/webhook',{method:'POST',headers:{'Stripe-Signature':'fake'},body:JSON.stringify({
     id:eventId,type:'checkout.session.completed',data:{object:{mode:'subscription',payment_status:'paid',client_reference_id:userId,subscription:subId}}
   })});
 }
@@ -186,7 +186,7 @@ test('explicit launch suspension keeps checkout closed without touching billing 
 test('missing, stale or malformed terms acceptance cannot create a payment', async () => {
   const f = fixture();
   for (const body of ['{}','null','{',JSON.stringify({acceptedTerms:false,termsVersion:'2026-10-08'}),JSON.stringify({acceptedTerms:true,termsVersion:'old'})]) {
-    const req = new Request('https://postibou.netlify.app/api/billing/checkout',{method:'POST',headers:{Origin:'https://postibou.netlify.app','Content-Type':'application/json'},body});
+    const req = new Request('https://postibou.com/api/billing/checkout',{method:'POST',headers:{Origin:'https://postibou.com','Content-Type':'application/json'},body});
     assert.equal((await f.handler(req)).status,400);
   }
   assert.equal(f.calls.length,0);assert.equal(database.queries.length,0);
