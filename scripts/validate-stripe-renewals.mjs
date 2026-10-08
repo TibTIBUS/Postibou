@@ -20,7 +20,7 @@ assert.equal(clock.status,'ready');assert.equal(clock.frozen_time,f.frozen,'This
 const deps={fetchAuth:auth,getDatabase:()=>database.sql,getStripe:()=>stripe,prices:f.prices};
 const secret='whsec_'+randomBytes(32).toString('hex');
 // Billing-only replay; durable confirmation and mail are covered in contract-confirmations.test.mjs.
-const webhook=createStripeWebhookHandler({...deps,confirmPurchase:async()=>{},getWebhookSecret:()=>secret});
+const webhook=createStripeWebhookHandler({...deps,confirmPurchase:async()=>{},referralPurchase:async()=>{},referralSettlement:async()=>{},getWebhookSecret:()=>secret});
 const usage=createUsageHandler({...deps,now:()=>clock.frozen_time*1000});
 const cancel=createCancellationHandler({...deps,now:()=>clock.frozen_time*1000});
 const results=[];const record=async x=>{results.push(x);console.log(JSON.stringify(x));await writeFile(process.env.POSTIBOU_CLOCK_REPORT,JSON.stringify({completed:false,account:'acct_1UOADR9BDDs3b0Qj',customer:f.customer,clock:f.clock,results},null,2),{mode:0o600});};

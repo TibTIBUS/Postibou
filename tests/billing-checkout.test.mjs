@@ -155,7 +155,7 @@ test('concurrent paid webhooks cannot replace each other even when both initiall
     return rows;
   };
   const stripe=webhookStripe({sub_a:subscription('sub_a'),sub_b:subscription('sub_b')});
-  const handler=createStripeWebhookHandler({confirmPurchase:async()=>{},getDatabase:()=>sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
+  const handler=createStripeWebhookHandler({confirmPurchase:async()=>{},referralPurchase:async()=>{},referralSettlement:async()=>{},getDatabase:()=>sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
   const results=await Promise.all([handler(webhookRequest('evt_a','sub_a')),handler(webhookRequest('evt_b','sub_b'))]);
   assert.deepEqual(results.map(r=>r.status).sort(),[200,500]);
   const row=(await database.db.query('SELECT stripe_subscription_id FROM postibou_entitlements')).rows[0];
@@ -168,7 +168,7 @@ test('concurrent paid webhooks cannot replace each other even when both initiall
 test('paid checkout can replace a confirmed terminal subscription, while its old events cannot overwrite the new one', async () => {
   await database.db.query("INSERT INTO postibou_entitlements(user_id,stripe_customer_id,stripe_subscription_id,stripe_subscription_status) VALUES ($1,'cus_same','sub_old','canceled')",[userId]);
   const stripe=webhookStripe({sub_old:subscription('sub_old','canceled'),sub_new:subscription('sub_new')});
-  const handler=createStripeWebhookHandler({confirmPurchase:async()=>{},getDatabase:()=>database.sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
+  const handler=createStripeWebhookHandler({confirmPurchase:async()=>{},referralPurchase:async()=>{},referralSettlement:async()=>{},getDatabase:()=>database.sql,getStripe:()=>stripe,getWebhookSecret:()=> 'fake'});
   assert.equal((await handler(webhookRequest('evt_new','sub_new'))).status,200);
   assert.equal((await handler(webhookRequest('evt_old','sub_old'))).status,500);
   assert.equal((await database.db.query('SELECT stripe_subscription_id FROM postibou_entitlements')).rows[0].stripe_subscription_id,'sub_new');

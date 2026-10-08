@@ -1,4 +1,5 @@
 import { createDatabase, createStripeClient } from './stripe-client.mjs';
+import { recordReferralPurchase, applyReferralMonth, settleReferralInvoice } from './lib/referrals.mjs';
 import { confirmContractPurchase } from './lib/contract-confirmation.mjs';
 
 export const config = { path: '/api/stripe/webhook', method: 'POST' };
@@ -92,7 +93,7 @@ async function persistSubscription(sql, userId, subscription, previousSubscripti
   `;
 }
 
-export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET'), confirmPurchase = confirmContractPurchase, prices = { launch: launchPrice, standard: standardPrice } } = {}) {
+export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET'), confirmPurchase = confirmContractPurchase, referralPurchase = recordReferralPurchase, referralRenewal = applyReferralMonth, referralSettlement = settleReferralInvoice, prices = { launch: launchPrice, standard: standardPrice } } = {}) {
   return async request => {
     if (request.method !== 'POST') return reply({ code: 'METHOD_NOT_ALLOWED' }, 405);
     const signature = request.headers.get('stripe-signature');
@@ -145,6 +146,7 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
           const saved = await persistSubscription(sql, userId, subscription, previousId || null);
           if (!saved.length) throw new Error('SUBSCRIPTION_CONFLICT');
           await scheduleLaunchPriceChange(stripe, subscription, prices);
+          await referralPurchase(sql, object, subscription);
         }
       // Lifecycle events may precede Checkout: they can refresh an already
       // confirmed subscription, never activate a new one through an old customer.
@@ -158,7 +160,12 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
             ? object : await stripe.subscriptions.retrieve(object.id);
           await persistSubscription(sql, rows[0].user_id, subscription);
         }
+      } else if (event.type === 'invoice.created') {
+        await referralRenewal(sql, stripe, object);
+      } else if (event.type === 'invoice.voided') {
+        await referralSettlement(sql, stripe, object);
       } else if (['invoice.paid', 'invoice.payment_failed'].includes(event.type)) {
+        if (event.type === 'invoice.paid') await referralSettlement(sql, stripe, object);
         const customer = customerId(object?.customer);
         const subId = subscriptionId(object?.subscription || object?.parent?.subscription_details?.subscription);
         const rows = customer ? await sql`SELECT user_id, stripe_subscription_id FROM public.postibou_entitlements WHERE stripe_customer_id = ${customer}` : [];

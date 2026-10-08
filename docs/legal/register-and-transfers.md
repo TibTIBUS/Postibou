@@ -9,6 +9,7 @@ Responsable : Thibaut MARIE, EI / Localia. 8 octobre 2026. Personnes : utilisate
 | Quotas | Contrat | Essai, compteur, métadonnées sans texte | Neon production AWS eu-central-1 | Compte ; métadonnées 90 jours sous réserve de rapprochement |
 | Paiement et contrats, après ouverture | Contrat / obligation / défense des droits | Références Stripe, facturation, versions et dates d’acceptation | Stripe + Neon + Netlify | Preuves 5 ans après contrat ; comptabilité 10 ans après exercice ; abandon 90 jours |
 | Confirmation durable, après activation | Contrat / obligation / défense des droits | E-mail vérifié, récapitulatif, références de paiement, CGV exactes, état d’envoi ; aucun texte généré | Neon + Netlify + Resend (Plus Five Five, Inc.), stockage États-Unis | Preuve 5 ans après contrat ; copies et journaux Resend annoncés à 30 jours dans l’offre gratuite actuelle |
+| Parrainage facultatif | Contrat demandé / prévention des abus | Codes, identifiants liés, règles acceptées, vérification du paiement, mois offerts ; totaux sans identité des filleuls dans le compte | Neon + Netlify + Stripe | Code : compte ; sans achat : revue à 12 mois ; preuves et comptabilité selon contrat |
 | Assistance et droits | Contrat / obligation / intérêt légitime | Messages et éléments strictement utiles | Messagerie de gestion et prestataires concernés | 1 an après traitement, exceptions motivées |
 | Sécurité | Intérêt légitime | Sessions, IP et éléments techniques | Netlify, Neon et prestataires | Durées des services ; limiter les traces sous contrôle de l’éditeur |
 
