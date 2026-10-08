@@ -68,6 +68,7 @@ async function authRequest(action, body) {
 }
 function renderSession(user) {
   state.user = user;
+  if (typeof refreshAdminAccess === 'function') refreshAdminAccess();
   if (!user) { clearReferralView(); $('#account-confirmations').hidden = true; $('#confirmation-list').replaceChildren(); state.credits = 10; state.plan = 'trial'; state.quota = 10; state.usage = null; state.quotaReady = false; state.quotaError = false; }
   const nav = $('.nav-actions .login-link');
   nav.textContent = user ? 'Mon compte' : 'Se connecter';

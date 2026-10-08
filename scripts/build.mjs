@@ -8,6 +8,7 @@ if (await readFile(new URL('legal/conditions-' + TERMS_VERSION + '.txt', project
 await mkdir(publishDirectory, { recursive: true });
 await copyFile(new URL('index.html', projectRoot), new URL('index.html', publishDirectory));
 await copyFile(new URL('auth.js', projectRoot), new URL('auth.js', publishDirectory));
+await copyFile(new URL('admin.js', projectRoot), new URL('admin.js', publishDirectory));
 console.log(`Interface prête : ${fileURLToPath(publishDirectory)}`);
 
 
