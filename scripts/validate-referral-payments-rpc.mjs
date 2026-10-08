@@ -71,7 +71,7 @@ try{
    assert.equal(previous.filter(r=>r.status==='used').length,2);
    assert.equal(invoiceWrites,0);assert.equal(invoice.total,990);
    assert.equal(invoice.discounts.length,0);
-   assert.equal(invoice.status,'paid');assert.equal(invoice.amount_paid,990);assert.equal(invoice.amount_due,0);
+   assert.equal(invoice.status,'paid');assert.equal(invoice.amount_paid,990);assert.equal(invoice.amount_remaining,0);
   }else{
    assert.equal(invoice.amount_due,0);assert.equal(invoice.total,0);
    if(invoice.status==='draft')invoice=await rpc('PostInvoicesInvoiceFinalize',{id:invoiceId},true);
