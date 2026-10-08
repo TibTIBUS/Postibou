@@ -29,7 +29,7 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase } = {}) {
       const rows = await sql`
         SELECT plan, trial_started_at, trial_ends_at, adaptations_used,
                stripe_subscription_status, subscription_period_start, subscription_period_end,
-               usage_period_start, cancel_at_period_end
+               usage_period_start, cancel_at_period_end, stripe_customer_id, stripe_subscription_id
         FROM public.postibou_entitlements WHERE user_id = ${session.user.id}::uuid
       `;
       const account = rows[0];
@@ -50,6 +50,7 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase } = {}) {
         subscriptionStatus: account.stripe_subscription_status, subscriptionPeriodStart: account.subscription_period_start,
         subscriptionPeriodEnd: account.subscription_period_end, cancelAtPeriodEnd: account.cancel_at_period_end,
         hasBilling: Boolean(account.stripe_customer_id),
+        canCancel: Boolean(subscriptionActive && account.stripe_subscription_id && !account.cancel_at_period_end),
         adaptationsUsed: used, quota, creditsRemaining: remaining, active
       });
     } catch {

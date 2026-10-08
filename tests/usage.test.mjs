@@ -30,16 +30,20 @@ test('does not create an entitlement for an unverified session', async () => {
 });
 
 test('returns the monthly quota and keeps access through the paid period end', async () => {
-  const sql = async strings => strings.join('?').includes('INSERT INTO public.postibou_entitlements')
-    ? []
-    : [{
+  const sql = async strings => {
+    const query = strings.join('?');
+    if (query.includes('INSERT INTO public.postibou_entitlements')) return [];
+    assert.match(query, /SELECT[\s\S]*stripe_customer_id/);
+    assert.match(query, /SELECT[\s\S]*stripe_subscription_id/);
+    return [{
         plan: 'monthly', trial_started_at: '2026-10-07T00:00:00Z', trial_ends_at: '2026-10-14T00:00:00Z',
         adaptations_used: 12, stripe_subscription_status: 'active',
         subscription_period_start: '2026-10-01T00:00:00.000Z',
         subscription_period_end: new Date(Date.now() + 86400000).toISOString(),
         usage_period_start: '2026-10-01T00:00:00.000Z', cancel_at_period_end: true,
-        stripe_customer_id: 'cus_123'
+        stripe_customer_id: 'cus_123', stripe_subscription_id: 'sub_123'
       }];
+  };
   const handler = createUsageHandler({
     fetchAuth: async () => Response.json({ session: { id: 's' }, user: { id: '11111111-1111-4111-8111-111111111111', emailVerified: true } }),
     getDatabase: () => sql
@@ -53,4 +57,5 @@ test('returns the monthly quota and keeps access through the paid period end', a
   assert.equal(body.active, true);
   assert.equal(body.cancelAtPeriodEnd, true);
   assert.equal(body.hasBilling, true);
+  assert.equal(body.canCancel, false);
 });
