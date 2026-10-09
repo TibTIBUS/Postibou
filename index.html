@@ -195,12 +195,13 @@
     .home-video .fine{margin:0}
     @media(max-width:720px){.home-video{padding-block:28px 32px}.home-video-intro{font-size:.9375rem;margin-bottom:20px}.home-video-player{border-radius:14px}.home-video-play{width:60px;height:60px}.home-video-duration{right:10px;bottom:10px}.home-video-links{margin-top:20px;gap:10px 20px}}
     @media(prefers-reduced-motion:reduce){.home-video-play{transition:none}}
+@media(max-width:720px){.nav{flex-wrap:wrap;padding-block:12px}.navlinks{display:flex;flex-basis:100%;order:3;justify-content:center}.navlinks a:not(.tutorial-nav){display:none}.tutorial-nav{font-size:.875rem}}
 </style>
 </head>
 <body>
   <header class="topbar"><div class="wrap nav">
     <a class="logo" href="#accueil" aria-label="Postibou, accueil"><span class="brand-symbol" aria-hidden="true">🦉</span>postibou<span class="brand-dot">.</span></a>
-    <nav class="navlinks" aria-label="Navigation principale"><a href="#outil">L’outil</a><a href="#accueil" data-scroll="fonctionnement">Comment ça marche</a><a href="#accueil" data-scroll="tarifs">Le tarif</a></nav>
+    <nav class="navlinks" aria-label="Navigation principale"><a href="#outil">L’outil</a><a href="#accueil" data-scroll="fonctionnement">Comment ça marche</a><a class="tutorial-nav" href="/tutoriels.html">Tutoriels</a><a href="#accueil" data-scroll="tarifs">Le tarif</a></nav>
     <div class="nav-actions"><a class="login-link" href="#connexion" data-auth="login">Se connecter</a><a class="button primary small" href="#connexion" data-auth="signup">Essayer 7 jours</a></div>
   </div></header>
   <main>
@@ -271,7 +272,7 @@
 
     <section class="view wrap legal-layout" id="view-informations" aria-label="Informations légales"><h1>Informations et confidentialité</h1><p>Postibou est édité par Thibaut MARIE, entrepreneur individuel, Localia.</p><p><a class="text-link" href="/mentions-legales.html">Mentions légales</a></p><p><a class="text-link" href="/conditions.html">Conditions d’utilisation</a></p><p><a class="text-link" href="/confidentialite.html">Politique de confidentialité</a></p><p><a class="text-link" href="/retractation.html">Rétractation</a></p><p>Votre essai gratuit reste accessible sans carte bancaire. L’abonnement mensuel est facultatif.</p><a class="button secondary" href="#accueil">Revenir à l’accueil</a></section>
   </main>
-  <footer class="footer"><div class="wrap"><div class="footer-inner"><a class="logo" href="#accueil" style="font-size:1.25rem">postibou<span class="brand-dot">.</span></a><div class="footer-links"><a href="#informations">Mentions & confidentialité</a><a href="/conditions.html">Conditions</a><a href="/retractation.html">Rétractation</a><a href="#outil">Démonstration</a></div></div><p class="footer-note">Postibou · 7 jours gratuits, puis un abonnement mensuel résiliable à tout moment.</p></div></footer>
+  <footer class="footer"><div class="wrap"><div class="footer-inner"><a class="logo" href="#accueil" style="font-size:1.25rem">postibou<span class="brand-dot">.</span></a><div class="footer-links"><a href="#informations">Mentions & confidentialité</a><a href="/conditions.html">Conditions</a><a href="/retractation.html">Rétractation</a><a href="/tutoriels.html">Tutoriels</a><a href="#outil">Démonstration</a></div></div><p class="footer-note">Postibou · 7 jours gratuits, puis un abonnement mensuel résiliable à tout moment.</p></div></footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     'use strict';
@@ -303,6 +304,11 @@
     function notify(message) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 4500); }
     function setAuthMode(mode) { configureAuthForm(mode); }
     function navigate(route, scrollId) {
+      const entry = new URL(location.href);
+      if (route === 'accueil' && entry.searchParams.get('section') === 'tarifs') {
+        scrollId = 'tarifs'; entry.searchParams.delete('section');
+        history.replaceState(null, '', entry.pathname + entry.search + entry.hash);
+      }
       const validRoutes = ['accueil', 'outil', 'connexion', 'compte', 'abonnement', 'administration', 'informations'];
       let selected = validRoutes.includes(route) ? route : 'accueil';
       if (selected === 'compte' && !state.user) { selected = 'connexion'; setAuthMode('login'); }
