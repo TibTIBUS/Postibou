@@ -1,0 +1,9 @@
+# postibou.com est le domaine principal.
+# Les routes serveur restent servies sur l'adresse Netlify : le webhook Stripe
+# y est enregistré (https://postibou.netlify.app/api/stripe/webhook) et Stripe
+# ne suit pas les redirections. Ces deux règles doivent rester en premier.
+https://postibou.netlify.app/api/*    /api/:splat    200
+https://postibou.netlify.app/auth/*   /auth/:splat   200
+
+# Toutes les pages de l'adresse Netlify renvoient vers postibou.com.
+https://postibou.netlify.app/*        https://postibou.com/:splat    301!
