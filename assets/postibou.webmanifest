@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "Postibou",
+  "short_name": "Postibou",
+  "description": "Vos mots, prêts à publier sur Facebook et Instagram.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f1fc",
+  "theme_color": "#231749",
+  "icons": [
+    {
+      "src": "/assets/postibou-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/postibou-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
