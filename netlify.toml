@@ -13,3 +13,27 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# postibou.com est le domaine principal.
+# Les routes serveur restent joignables sur l'adresse Netlify, car le webhook
+# Stripe y est enregistré (https://postibou.netlify.app/api/stripe/webhook) et
+# Stripe ne suit pas les redirections. Ces deux règles doivent rester en premier.
+[[redirects]]
+  from = "https://postibou.netlify.app/api/*"
+  to = "/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "https://postibou.netlify.app/auth/*"
+  to = "/auth/:splat"
+  status = 200
+
+# Toutes les pages de l'adresse Netlify renvoient vers postibou.com.
+[[redirects]]
+  from = "https://postibou.netlify.app/*"
+  to = "https://postibou.com/:splat"
+  status = 301
+  force = true

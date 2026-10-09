@@ -20,5 +20,10 @@ for (const file of await readdir(new URL('legal/', projectRoot))) {
   await copyFile(new URL('legal/' + file, projectRoot), new URL(file, publishDirectory));
 }
 
+// Robots and sitemap for search engines.
+for (const file of await readdir(new URL('seo/', projectRoot))) {
+  await copyFile(new URL('seo/' + file, projectRoot), new URL(file, publishDirectory));
+}
+
 // Include public images referenced by social sharing metadata.
 await cp(new URL('assets/', projectRoot), new URL('assets/', publishDirectory), { recursive: true });
