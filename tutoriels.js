@@ -2,10 +2,10 @@
   // Add an ID only after the owner supplies the real YouTube link.
   const videos = {
     presentation: 'FUsqPeqcp8o',
-    compte: null,
+    compte: 'zbAkKD4z_5k',
     'premier-post': 'Y1yc605IWtg',
-    idees: null,
-    parrainage: null
+    idees: 'VeOAgi7XpB0',
+    parrainage: 'WVPkvjpIdz8'
   };
   document.querySelectorAll('[data-video]').forEach(card => {
     const id = videos[card.dataset.video];
