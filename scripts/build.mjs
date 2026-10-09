@@ -1,5 +1,5 @@
 import { TERMS_DOCUMENT, TERMS_VERSION } from '../netlify/functions/legal-policy.mjs';
-import { copyFile, mkdir, readdir, readFile } from 'node:fs/promises';
+import { cp, copyFile, mkdir, readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const projectRoot = new URL('../', import.meta.url);
@@ -16,3 +16,6 @@ console.log(`Interface prête : ${fileURLToPath(publishDirectory)}`);
 for (const file of await readdir(new URL('legal/', projectRoot))) {
   await copyFile(new URL('legal/' + file, projectRoot), new URL(file, publishDirectory));
 }
+
+// Include public images referenced by social sharing metadata.
+await cp(new URL('assets/', projectRoot), new URL('assets/', publishDirectory), { recursive: true });
