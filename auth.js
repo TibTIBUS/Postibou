@@ -308,4 +308,4 @@ async function recoverPayment() {
   finally { button.disabled = false; paymentSyncBusy = false; }
 }
 $('#sync-payment').addEventListener('click',recoverPayment);
-if(new URLSearchParams(location.search).get('billing') === 'success') sessionCheck?.then(()=>recoverPayment()).catch(()=>{});
+if(new URLSearchParams(location.search).get('billing') === 'success') { try { const clean = new URL(location.href); clean.searchParams.delete('billing'); history.replaceState(null, '', clean.pathname + clean.search + clean.hash); } catch {} sessionCheck?.then(()=>recoverPayment()).catch(()=>{}); }
