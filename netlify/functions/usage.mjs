@@ -1,3 +1,4 @@
+import { releaseStaleReservationsSafely } from './lib/stale-reservations.mjs';
 import { findGift, giftUsage } from './lib/gifts.mjs';
 import { AUTH_URL, SITE_ORIGIN } from './auth.mjs';
 
@@ -27,6 +28,7 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase, now = () =>
         SELECT id FROM neon_auth."user" WHERE id = ${session.user.id}::uuid AND "emailVerified" = true
         ON CONFLICT (user_id) DO NOTHING
       `;
+      await releaseStaleReservationsSafely(sql, session.user.id);
       const rows = await sql`
         SELECT plan, trial_started_at, trial_ends_at, adaptations_used,
                stripe_subscription_status, subscription_period_start, subscription_period_end,
