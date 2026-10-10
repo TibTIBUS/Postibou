@@ -371,6 +371,8 @@
       $('#account-credits').textContent = state.credits;
       $('#account-plan-summary').textContent = gifted
         ? '30 adaptations par mois civil, sans cumul. Accès offert jusqu’au ' + new Intl.DateTimeFormat('fr-FR',{dateStyle:'long',timeZone:'Europe/Paris'}).format(new Date(new Date(usage.giftEndsAt).getTime() - 1)) + '. Aucun prélèvement automatique. Ensuite, choisissez si vous souhaitez vous abonner.'
+        : subscribed && usage.paymentFailed
+        ? 'Le paiement de votre renouvellement n’est pas passé. Mettez à jour votre carte avec « Factures et moyen de paiement » : vos 30 adaptations se débloquent dès que le paiement est accepté.'
         : subscribed
         ? '30 adaptations par période de facturation. Votre abonnement est mensuel et résiliable à tout moment.'
         : '7 jours gratuits · 10 adaptations incluses. Ensuite, choisissez si vous souhaitez vous abonner.';
@@ -415,7 +417,7 @@
           const response = await fetch('/api/adapt', {method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:normalized,tone,mode}),signal:AbortSignal.timeout(50000)});
           const result = await response.json();
           if (!response.ok) {
-            const messages = {GIFT_EXPIRED:'Votre accès offert est terminé. Vous pouvez choisir un abonnement pour continuer.',UNAUTHORIZED:'Reconnectez-vous pour adapter ce texte.',TRIAL_EXPIRED:'Votre essai de 7 jours est terminé.',SUBSCRIPTION_INACTIVE:'Votre abonnement n’est pas actif. Vérifiez votre compte ou souscrivez.',QUOTA_EXHAUSTED:'Vous avez utilisé toutes les adaptations de votre période.',SERVICE_UNAVAILABLE:'Le service est momentanément indisponible. Aucun crédit n’a été utilisé.',GENERATION_FAILED:'La génération a échoué. Aucun crédit n’a été utilisé.',INVALID_INPUT:'Vérifiez votre texte et le ton choisi.'};
+            const messages = {GIFT_EXPIRED:'Votre accès offert est terminé. Vous pouvez choisir un abonnement pour continuer.',UNAUTHORIZED:'Reconnectez-vous pour adapter ce texte.',TRIAL_EXPIRED:'Votre essai de 7 jours est terminé.',SUBSCRIPTION_INACTIVE:'Votre abonnement n’est pas actif. Vérifiez votre compte ou souscrivez.',QUOTA_EXHAUSTED:'Vous avez utilisé toutes les adaptations de votre période.',PAYMENT_FAILED:'Le paiement de votre abonnement n’est pas passé. Mettez à jour votre carte dans Mon compte → « Factures et moyen de paiement » : vos adaptations se débloquent dès que le paiement est accepté.',SERVICE_UNAVAILABLE:'Le service est momentanément indisponible. Aucun crédit n’a été utilisé.',GENERATION_FAILED:'La génération a échoué. Aucun crédit n’a été utilisé.',INVALID_INPUT:'Vérifiez votre texte et le ton choisi.'};
             if (response.status === 429) { state.credits = 0; state.quotaReady = true; updateQuota(); }
             throw new Error(messages[result.code] || 'La génération n’a pas abouti. Réessayez dans un instant.');
           }

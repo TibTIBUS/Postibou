@@ -59,7 +59,7 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
           WHERE user_id = ${userId}::uuid AND (
             (plan = 'trial' AND trial_ends_at > now() AND adaptations_used < 10)
             OR
-            (plan = 'monthly' AND stripe_subscription_status IN ('active', 'past_due')
+            (plan = 'monthly' AND stripe_subscription_status = 'active'
               AND subscription_period_end > now()
               AND (CASE WHEN usage_period_start IS DISTINCT FROM subscription_period_start THEN 0 ELSE adaptations_used END) < 30)
           )
@@ -73,6 +73,7 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
         if (gift) return errorReply('QUOTA_EXHAUSTED', 429);
         const rows = await sql`SELECT plan, trial_ends_at, adaptations_used, stripe_subscription_status, subscription_period_end, subscription_period_start, usage_period_start FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
         const account = rows[0];
+        if (account?.plan === 'monthly' && account.stripe_subscription_status === 'past_due' && new Date(account.subscription_period_end).getTime() > Date.now()) return errorReply('PAYMENT_FAILED', 402);
         if (account?.plan === 'monthly' && (!['active', 'past_due'].includes(account.stripe_subscription_status) || new Date(account.subscription_period_end).getTime() <= Date.now())) return errorReply('SUBSCRIPTION_INACTIVE', 403);
         if (account?.plan === 'trial' && new Date(account.trial_ends_at).getTime() <= Date.now()) return errorReply('TRIAL_EXPIRED', 429);
         return errorReply('QUOTA_EXHAUSTED', 429);
