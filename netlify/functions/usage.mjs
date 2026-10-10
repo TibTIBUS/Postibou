@@ -47,14 +47,16 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase, now = () =>
       const periodReset = account.plan === 'monthly'
         && String(account.usage_period_start || '') !== String(account.subscription_period_start || '');
       const used = periodReset ? 0 : Number(account.adaptations_used);
-      const remaining = active ? Math.max(0, quota - used) : 0;
+      // Renouvellement impayé : la nouvelle période n'ouvre pas de crédits tant que Stripe n'a pas encaissé.
+      const paymentFailed = subscriptionActive && account.stripe_subscription_status === 'past_due';
+      const remaining = active && !paymentFailed ? Math.max(0, quota - used) : 0;
       return reply({
         plan: account.plan, trialStartedAt: account.trial_started_at, trialEndsAt: account.trial_ends_at,
         subscriptionStatus: account.stripe_subscription_status, subscriptionPeriodStart: account.subscription_period_start,
         subscriptionPeriodEnd: account.subscription_period_end, cancelAtPeriodEnd: account.cancel_at_period_end,
         hasBilling: Boolean(account.stripe_customer_id),
         canCancel: Boolean(subscriptionActive && account.stripe_subscription_id && !account.cancel_at_period_end),
-        adaptationsUsed: used, quota, creditsRemaining: remaining, active
+        adaptationsUsed: used, quota, creditsRemaining: remaining, active, paymentFailed
       });
     } catch {
       return reply({ code: 'SERVICE_UNAVAILABLE' }, 503);

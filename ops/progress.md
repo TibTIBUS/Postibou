@@ -10,9 +10,11 @@
   3. `?billing=success` retiré de l'adresse après activation (évite les relances depuis un favori).
   4. Affichage des crédits restants d'un abonné corrigé (restait bloqué à 30).
 
+- PR #19 fusionnée et en ligne le 10 oct. 2026 (vérifié sur postibou.com).
+- Décision de Thibaut (10 oct.) : bloquer le nouveau quota tant qu'un renouvellement est impayé. Correction sur la branche `fix/defaut-paiement`.
+
 ## Décisions attendues de Thibaut
-1. Fusionner la pull request (mise en production).
-2. Défaut de paiement (`past_due`) : aujourd'hui l'abonné reçoit ses 30 nouveaux crédits sans avoir payé, jusqu'à la fin des relances Stripe. Bloquer jusqu'au paiement, ou laisser comme ça ?
+1. Fusionner la PR « Bloquer le nouveau quota quand le renouvellement est impayé ».
 
 ## Restant (non corrigé)
 - Crédits perdus si la fonction de génération est coupée net (pas de nettoyage automatique des réservations bloquées).
@@ -21,4 +23,4 @@
 - Achat réel de bout en bout jamais suivi (navigateur → webhook → quota) : à observer sur le prochain abonné.
 
 ## Prochaine action
-Après fusion : vérifier le déploiement Netlify, puis traiter les crédits bloqués (tâche planifiée de remboursement).
+Après fusion : vérifier la mise en ligne, puis traiter les crédits bloqués (tâche planifiée de remboursement).
