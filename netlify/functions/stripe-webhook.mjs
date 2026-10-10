@@ -31,12 +31,26 @@ function subscriptionId(value) {
   return null;
 }
 
-function monthsUntilLaunchPriceEnds(periodEnd) {
-  if (!periodEnd || periodEnd >= launchCutover) return 1;
-  const end = new Date(periodEnd * 1000);
-  const cutover = new Date(launchCutover * 1000);
-  const monthDistance = (cutover.getUTCFullYear() - end.getUTCFullYear()) * 12 + cutover.getUTCMonth() - end.getUTCMonth();
-  return 2 + Math.max(0, monthDistance);
+function addMonths(timestamp, count) {
+  const date = new Date(timestamp * 1000);
+  const day = date.getUTCDate();
+  const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + count, 1, date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()));
+  const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(day, lastDay));
+  return Math.floor(target.getTime() / 1000);
+}
+
+// Nombre de mois à 7,90 € comptés depuis le début de la phase : la première
+// échéance à 9,90 € est la première qui tombe le 1er janvier 2027 (Paris) ou après.
+export function monthsUntilLaunchPriceEnds(phaseStart) {
+  if (!phaseStart || phaseStart >= launchCutover) return 1;
+  let count = 1;
+  while (addMonths(phaseStart, count) < launchCutover && count < 24) count += 1;
+  return count;
+}
+
+function alreadyScheduled(schedule, prices) {
+  return (schedule.phases || []).some(phase => (phase.items || []).some(item => (typeof item.price === 'string' ? item.price : item.price?.id) === prices.standard));
 }
 
 async function scheduleLaunchPriceChange(stripe, subscription, prices) {
@@ -52,8 +66,9 @@ async function scheduleLaunchPriceChange(stripe, subscription, prices) {
       { from_subscription: subscription.id },
       { idempotencyKey: 'postibou_schedule_' + subscription.id }
     );
+  if (alreadyScheduled(schedule, prices)) return;
   const start = schedule.current_phase?.start_date || period.start;
-  const intervalCount = monthsUntilLaunchPriceEnds(period.end);
+  const intervalCount = monthsUntilLaunchPriceEnds(start);
   await stripe.subscriptionSchedules.update(schedule.id, {
     end_behavior: 'release',
     proration_behavior: 'none',

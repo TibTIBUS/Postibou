@@ -127,7 +127,7 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
       const rows = await sql`SELECT plan, adaptations_used, trial_ends_at, subscription_period_start, subscription_period_end, usage_period_start FROM public.postibou_entitlements WHERE user_id = ${userId}::uuid`;
       const account = rows[0];
       const quota = account.plan === 'monthly' ? 30 : 10;
-      const used = account.plan === 'monthly' && account.usage_period_start !== account.subscription_period_start ? 0 : Number(account.adaptations_used);
+      const used = account.plan === 'monthly' && String(account.usage_period_start || '') !== String(account.subscription_period_start || '') ? 0 : Number(account.adaptations_used);
       return Response.json({ mode, facebook: output.facebook.trim(), instagram: output.instagram.trim(), plan: account.plan, creditsRemaining: Math.max(0, quota - used), trialEndsAt: account.trial_ends_at, periodEndsAt: account.subscription_period_end }, { headers });
     } catch {
       try {
