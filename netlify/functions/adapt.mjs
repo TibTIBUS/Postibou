@@ -1,3 +1,4 @@
+import { releaseStaleReservationsSafely } from './lib/stale-reservations.mjs';
 import { findGift, giftUsage, reserveGift, refundGift } from './lib/gifts.mjs';
 import { randomUUID } from 'node:crypto';
 import { AUTH_URL, SITE_ORIGIN } from './auth.mjs';
@@ -44,6 +45,7 @@ export function createAdaptHandler({ fetchAuth = fetch, fetchModel = fetch, getD
         SELECT id FROM neon_auth."user" WHERE id = ${userId}::uuid AND "emailVerified" = true
         ON CONFLICT (user_id) DO NOTHING
       `;
+      await releaseStaleReservationsSafely(sql, userId);
       gift = await findGift(sql, userId);
       if (gift && !gift.gift_active) return errorReply('GIFT_EXPIRED', 403);
       reservationId = randomUUID();

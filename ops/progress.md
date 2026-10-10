@@ -13,14 +13,18 @@
 - PR #19 fusionnée et en ligne le 10 oct. 2026 (vérifié sur postibou.com).
 - Décision de Thibaut (10 oct.) : bloquer le nouveau quota tant qu'un renouvellement est impayé. Correction sur la branche `fix/defaut-paiement`.
 
+- PR #20 (défaut de paiement) fusionnée et en ligne le 10 oct. 2026 (vérifié sur postibou.com).
+- Crédits bloqués : remboursés automatiquement après 10 min, à l'ouverture du compte ou à la génération suivante (branche `fix/credits-bloques`). Pas de tâche planifiée, pour ne pas réveiller la base Neon gratuite.
+
 ## Décisions attendues de Thibaut
-1. Fusionner la PR « Bloquer le nouveau quota quand le renouvellement est impayé ».
+1. Fusionner la PR « Rendre les crédits des générations interrompues ».
 
 ## Restant (non corrigé)
-- Crédits perdus si la fonction de génération est coupée net (pas de nettoyage automatique des réservations bloquées).
 - L'essai démarre à l'inscription, pas à la vérification de l'e-mail.
 - Messages d'erreur techniques en anglais si le serveur renvoie une page d'erreur (502/504).
 - Achat réel de bout en bout jamais suivi (navigateur → webhook → quota) : à observer sur le prochain abonné.
 
+- À confirmer sans accès Neon : la colonne `created_at` de `postibou_adaptation_reservations` en production (utilisée par db/retention-review.sql). Si elle manque, le nettoyage ne fait rien mais ne bloque rien.
+
 ## Prochaine action
-Après fusion : vérifier la mise en ligne, puis traiter les crédits bloqués (tâche planifiée de remboursement).
+Après fusion : vérifier la mise en ligne. Cycle fiabilité alors bouclé ; proposer le cycle suivant (acquisition).

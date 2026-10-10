@@ -2,7 +2,7 @@
 
 | Tâche | Critère | Verdict | Preuve |
 |---|---|---|---|
-| Suite de tests | 0 échec | validé | `npm test` : 117/117, 10/10/2026 |
+| Suite de tests | 0 échec | validé | `npm test` : 121/121, 10/10/2026 |
 | Build | `dist` généré | validé | `node scripts/build.mjs` |
 | Site en ligne | HTTP 200 | validé | GET https://postibou.com/ |
 | Route webhook | pas de redirection | validé | POST sans signature → 400 |
@@ -12,6 +12,6 @@
 | Relance d'activation | planning non raccourci | validé (branche) | tests/launch-schedule.test.mjs |
 | Bascule heure de Paris | échéance 1er janv. 00h30 à 9,90 € | validé (branche) | tests/launch-schedule.test.mjs |
 | Affichage crédits abonné | reflète le compteur | non résolu | correction appliquée, pas de test dédié |
-| Défaut de paiement | pas de crédits sans paiement | validé (branche) | tests/payment-failed.test.mjs : échoue sans la correction, passe avec |
-| Crédits bloqués | remboursés après coupure | échoué | revue contrôle (raisonnement) |
+| Défaut de paiement | pas de crédits sans paiement | validé (en ligne) | tests/payment-failed.test.mjs : échoue sans la correction, passe avec |
+| Crédits bloqués | remboursés après coupure | validé (branche) | tests/stale-reservations.test.mjs (essai, abonné, compte) ; accès offert non testé |
 | Achat réel bout en bout | suivi complet | non résolu | jamais exercé |
