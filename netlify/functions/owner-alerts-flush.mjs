@@ -1,15 +1,19 @@
 // Reprise quotidienne bornée des alertes propriétaire. Les reprises au fil du
 // trafic (sessions, webhooks Stripe, lectures admin) suffisent un jour normal,
-// mais un jour creux ne doit pas laisser une alerte silencieusement coincée :
+// mais un jour creux ne doit pas laisser une alerte sans reprise :
 // - flushOwnerAlerts : au plus 20 reprises par exécution, mêmes variables
-//   d'environnement et même canal que les autres fonctions (aucun secret neuf) ;
-// - balayage : les lignes encore en attente après 24 h passent en « failed »
-//   (abandon assumé et visible en base) au lieu de rester « pending » muettes ;
-// - incident : s'il reste des échecs sur 7 jours, UNE alerte récapitulative par
-//   jour (dedupe_key daté) prévient le propriétaire via le même chemin testé.
+//   d'environnement et même canal que les autres fonctions (aucun secret neuf),
+//   chaque tentative réelle décomptée du plafond journalier partagé ;
+// - sweepExpiredOwnerAlerts : marquage terminal visible — « failed » (erreurs
+//   certaines, compteur épuisé) ou « a_verifier » (livraison ambiguë âgée de
+//   plus de 24 h, jamais renvoyée après expiration de l'idempotence) ;
+// - incident : s'il reste des échecs ou des « à vérifier » sur 7 jours, UNE
+//   alerte récapitulative par jour (dedupe_key daté) prévient le propriétaire
+//   via le même chemin testé. Si le fournisseur est en panne, ce récapitulatif
+//   échoue aussi : l'état reste conservé en base, sans promesse de zéro perte.
 // Jamais d'erreur propagée : une panne de la reprise ne casse rien d'autre.
 import { neon } from '@neondatabase/serverless';
-import { enqueueOwnerAlert, flushOwnerAlerts } from './lib/owner-alert.mjs';
+import { enqueueOwnerAlert, flushOwnerAlerts, sweepExpiredOwnerAlerts } from './lib/owner-alert.mjs';
 
 const FLUSH_LIMIT = 20;
 // Adresse du propriétaire, identique à celle des autres alertes (destination
@@ -28,15 +32,11 @@ export function createFlushHandler({ getDatabase, fetchEmail = fetch, parisDate 
     }
     try {
       await flushOwnerAlerts(sql, { limit: FLUSH_LIMIT, fetchEmail });
-      const abandoned = await sql`
-        UPDATE public.postibou_owner_alerts SET status = 'failed', lease_until = NULL
-        WHERE status IN ('pending','sending') AND created_at <= now() - interval '24 hours'
-        RETURNING id
-      `;
+      await sweepExpiredOwnerAlerts(sql);
       const failed = await sql`
-        SELECT kind, count(*)::int AS n FROM public.postibou_owner_alerts
-        WHERE status = 'failed' AND created_at > now() - interval '7 days'
-        GROUP BY kind ORDER BY kind
+        SELECT status, kind, count(*)::int AS n FROM public.postibou_owner_alerts
+        WHERE status IN ('failed','a_verifier') AND created_at > now() - interval '7 days'
+        GROUP BY status, kind ORDER BY status, kind
       `;
       let incident = 0;
       if (failed.length) {
@@ -46,16 +46,16 @@ export function createFlushHandler({ getDatabase, fetchEmail = fetch, parisDate 
           dedupeKey: 'owner-alerts-incident/' + parisDate(),
           email: OPERATOR_EMAIL,
           lines: [
-            total + ' alerte(s) propriétaire en échec sur les 7 derniers jours :',
-            ...failed.map(row => '- ' + row.kind + ' : ' + row.n),
-            'Ces alertes ne sont plus retentées automatiquement.',
-            "Vérifier la clé Resend et le domaine d'envoi, puis relancer manuellement si besoin."
+            total + ' alerte(s) propriétaire à traiter sur les 7 derniers jours :',
+            ...failed.map(row => '- ' + row.kind + ' (' + (row.status === 'a_verifier' ? 'livraison à vérifier' : 'envoi en échec') + ') : ' + row.n),
+            "Les lignes « failed » ne sont plus retentées automatiquement ; les lignes « à vérifier » ne sont jamais renvoyées (doublon possible).",
+            "Vérifier la clé Resend et le domaine d'envoi, puis relancer ou confirmer manuellement."
           ],
           fetchEmail
         });
         incident = 1;
       }
-      return { flushed: true, abandoned: abandoned.length, failedKinds: failed.length, incident };
+      return { flushed: true, failedKinds: failed.length, incident };
     } catch {
       return { flushed: false, reason: 'FLUSH_ERROR' };
     }
