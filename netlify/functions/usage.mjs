@@ -1,4 +1,5 @@
 import { releaseStaleReservationsSafely } from './lib/stale-reservations.mjs';
+import { enqueueOwnerAlert, flushOwnerAlerts } from './lib/owner-alert.mjs';
 import { findGift, giftUsage } from './lib/gifts.mjs';
 import { AUTH_URL, SITE_ORIGIN } from './auth.mjs';
 
@@ -23,11 +24,14 @@ export function createUsageHandler({ fetchAuth = fetch, getDatabase, now = () =>
       if (!session?.session || session.user?.emailVerified !== true || !session.user?.id) return reply({ code: 'UNAUTHORIZED' }, 401);
 
       const sql = getDatabase ? await getDatabase() : await createDatabase();
-      await sql`
+      const insertedEntitlement = await sql`
         INSERT INTO public.postibou_entitlements (user_id)
         SELECT id FROM neon_auth."user" WHERE id = ${session.user.id}::uuid AND "emailVerified" = true
         ON CONFLICT (user_id) DO NOTHING
+        RETURNING user_id
       `;
+      if (insertedEntitlement.length) await enqueueOwnerAlert(sql, { kind: 'Nouvelle inscription', dedupeKey: 'signup/' + session.user.id, userId: session.user.id, email: session.user.email, lines: ['Première session vérifiée (compte Google ou première visite après vérification).'] });
+      else await flushOwnerAlerts(sql);
       await releaseStaleReservationsSafely(sql, session.user.id);
       const rows = await sql`
         SELECT plan, trial_started_at, trial_ends_at, adaptations_used,
@@ -74,4 +78,5 @@ async function createDatabase() {
 }
 
 export default createUsageHandler();
+
 

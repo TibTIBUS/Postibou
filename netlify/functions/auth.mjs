@@ -1,3 +1,4 @@
+import { enqueueOwnerAlert } from './lib/owner-alert.mjs';
 // Public Neon endpoint; no database password or administrative key is needed.
 export const AUTH_URL = 'https://ep-cool-base-b1xdts2i.neonauth.c-5.eu-central-1.aws.neon.tech/neondb/auth';
 export const SITE_ORIGIN = 'https://postibou.com';
@@ -88,11 +89,13 @@ export function createHandler(fetchAuth = fetch, getDatabase = createDatabase) {
         if (action === 'signup' && typeof data?.user?.id === 'string') {
           try {
             const sql = await getDatabase();
-            await sql`
+            const inserted = await sql`
               INSERT INTO public.postibou_entitlements (user_id)
               SELECT id FROM neon_auth."user" WHERE id = ${data.user.id}::uuid
               ON CONFLICT (user_id) DO NOTHING
+              RETURNING user_id
             `;
+            if (inserted.length) await enqueueOwnerAlert(sql, { kind: 'Nouvelle inscription', dedupeKey: 'signup/' + data.user.id, userId: data.user.id, email: data.user.email, lines: ['Inscription par e-mail ; vérification de l’adresse en cours.'] });
           } catch { /* The first verified sign-in initializes the trial if setup is incomplete. */ }
         }
       }
@@ -111,3 +114,4 @@ async function createDatabase() {
 }
 
 export default createHandler();
+
