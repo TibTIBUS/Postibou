@@ -1,5 +1,6 @@
 import { createDatabase, getVerifiedUser } from './stripe-client.mjs';
 import { SITE_ORIGIN } from './auth.mjs';
+import { flushOwnerAlerts } from './lib/owner-alert.mjs';
 
 export const config = { path: ['/api/admin/access', '/api/admin/users'] };
 const headers = { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' };
@@ -35,6 +36,7 @@ export function createAdminHandler({ getUser = getVerifiedUser, getDatabase = cr
       const user = await getUser(request);
       if (!user) return reply({ code: 'UNAUTHORIZED' }, 401);
       const sql = await getDatabase();
+      await flushOwnerAlerts(sql);
       const roles = await sql`SELECT user_id FROM public.postibou_admins WHERE user_id = ${user.id}::uuid`;
       if (url.pathname === '/api/admin/access') return reply({ admin: roles.length === 1 });
       if (!roles.length) return reply({ code: 'FORBIDDEN' }, 403);
@@ -97,3 +99,4 @@ export function createAdminHandler({ getUser = getVerifiedUser, getDatabase = cr
   };
 }
 export default createAdminHandler();
+

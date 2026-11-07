@@ -1,6 +1,7 @@
 import { createDatabase, createStripeClient } from './stripe-client.mjs';
 import { recordReferralPurchase, applyReferralMonth, settleReferralInvoice } from './lib/referrals.mjs';
 import { confirmContractPurchase } from './lib/contract-confirmation.mjs';
+import { enqueueOwnerAlert, flushOwnerAlerts } from './lib/owner-alert.mjs';
 
 export const config = { path: '/api/stripe/webhook', method: 'POST' };
 const headers = { 'Cache-Control': 'no-store', 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' };
@@ -130,6 +131,14 @@ export async function fulfillPaidCheckout(sql, stripe, object, { confirmPurchase
           if (!saved.length) throw new Error('SUBSCRIPTION_CONFLICT');
           await scheduleLaunchPriceChange(stripe, subscription, prices);
           await referralPurchase(sql, object, subscription);
+          // Premier passage payant du compte : une seule alerte, jamais de réabonnement.
+          try {
+            const countRow = await sql`SELECT count(*)::int AS n FROM public.postibou_contract_confirmations WHERE user_id = ${userId}::uuid`;
+            if (countRow[0]?.n === 1) {
+              const accountRow = await sql`SELECT email FROM neon_auth."user" WHERE id = ${userId}::uuid`;
+              await enqueueOwnerAlert(sql, { kind: 'Premier abonnement payant', dedupeKey: 'first-paid/' + userId, userId, email: accountRow[0]?.email, amountCents: Number.isSafeInteger(object?.amount_total) ? object.amount_total : null, lines: ['Abonnement ' + subscription.id + ' activé.'] });
+            }
+          } catch { /* L’alerte propriétaire ne bloque jamais l’activation. */ }
 }
 
 export function createStripeWebhookHandler({ getDatabase = createDatabase, getStripe = createStripeClient, getWebhookSecret = () => globalThis.Netlify?.env?.get('STRIPE_WEBHOOK_SECRET'), confirmPurchase = confirmContractPurchase, referralPurchase = recordReferralPurchase, referralRenewal = applyReferralMonth, referralSettlement = settleReferralInvoice, prices = { launch: launchPrice, standard: standardPrice } } = {}) {
@@ -195,6 +204,7 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
         }
       }
       await sql`UPDATE public.postibou_stripe_events SET status = 'processed', processed_at = now() WHERE event_id = ${event.id}`;
+      await flushOwnerAlerts(sql);
       return reply({ received: true });
     } catch {
       return reply({ code: 'WEBHOOK_PROCESSING_FAILED' }, 500);
@@ -203,3 +213,4 @@ export function createStripeWebhookHandler({ getDatabase = createDatabase, getSt
 }
 
 export default createStripeWebhookHandler();
+

@@ -1,13 +1,13 @@
-// Alertes e-mail au propriÃ©taire : nouvelle inscription, premier passage payant.
-// File persistante (table postibou_owner_alerts) : l'Ã©vÃ©nement est enregistrÃ© une
-// seule fois (dedupe_key unique), la livraison est tentÃ©e immÃ©diatement puis
+// Alertes e-mail au propriétaire : nouvelle inscription, premier passage payant.
+// File persistante (table postibou_owner_alerts) : l'événement est enregistré une
+// seule fois (dedupe_key unique), la livraison est tentée immédiatement puis
 // reprise au fil du trafic existant (flushOwnerAlerts : sessions utilisateurs,
-// webhooks Stripe, lectures admin dont la revue pÃ©riodique de l'exploitant)
-// jusqu'Ã  succÃ¨s ou abandon. Jamais d'erreur propagÃ©e : le flux mÃ©tier n'est
-// pas bloquÃ© par une alerte.
-const ALERT_TO = 'contact@localiapro.fr'; // destination validÃ©e par le propriÃ©taire le 07/11/2026
+// webhooks Stripe, lectures admin dont la revue périodique de l'exploitant)
+// jusqu'à succès ou abandon. Jamais d'erreur propagée : le flux métier n'est
+// pas bloqué par une alerte.
+const ALERT_TO = 'contact@localiapro.fr'; // destination validée par le propriétaire le 07/11/2026
 const MAX_ATTEMPTS = 8;
-// Marqueur technique non personnel : alias dÃ©diÃ©s aux essais internes.
+// Marqueur technique non personnel : alias dédiés aux essais internes.
 const TEST_ALIAS_PATTERN = /\+postibou\.essai@/i;
 
 const safeEmail = value => typeof value === 'string' && value.length <= 254 && /^[^\s<>\r\n@]+@[^\s<>\r\n@]+\.[^\s<>\r\n@]+$/.test(value);
@@ -20,8 +20,8 @@ function alertConfig() {
   return key && safeEmail(from) ? { key, from } : null;
 }
 
-// Comptes internes marquÃ©s [TEST] : administrateurs (donnÃ©e existante, non
-// versionnÃ©e) ou alias d'essai conventionnÃ©. Aucune adresse personnelle ici.
+// Comptes internes marqués [TEST] : administrateurs (donnée existante, non
+// versionnée) ou alias d'essai conventionné. Aucune adresse personnelle ici.
 async function isInternalAccount(sql, userId, email) {
   if (TEST_ALIAS_PATTERN.test(String(email || ''))) return true;
   if (userId) {
@@ -37,9 +37,9 @@ function buildPayload({ kind, email, test, lines = [], amountCents = null }) {
   if (!safeEmail(email) || typeof kind !== 'string' || !kind) return null;
   const amount = money(amountCents);
   return {
-    subject: `${test ? '[TEST] ' : ''}Postibou â ${kind}`,
+    subject: `${test ? '[TEST] ' : ''}Postibou — ${kind}`,
     text: [
-      `${kind}${test ? ' (compte de test)' : ''} â ${parisNow()} (heure de Paris).`,
+      `${kind}${test ? ' (compte de test)' : ''} — ${parisNow()} (heure de Paris).`,
       `Compte : ${email}`,
       ...(amount ? [`Montant : ${amount}`] : []),
       ...lines,
@@ -49,7 +49,7 @@ function buildPayload({ kind, email, test, lines = [], amountCents = null }) {
   };
 }
 
-// Enregistre l'Ã©vÃ©nement une seule fois, puis tente la livraison. Ne lÃ¨ve rien.
+// Enregistre l'événement une seule fois, puis tente la livraison. Ne lève rien.
 export async function enqueueOwnerAlert(sql, { kind, dedupeKey, userId = null, email, lines = [], amountCents = null, fetchEmail = fetch } = {}) {
   try {
     if (typeof dedupeKey !== 'string' || !dedupeKey || dedupeKey.length > 180) return;
@@ -63,11 +63,11 @@ export async function enqueueOwnerAlert(sql, { kind, dedupeKey, userId = null, e
       RETURNING id
     `;
     if (inserted.length) await deliverOwnerAlert(sql, inserted[0].id, { fetchEmail });
-  } catch { /* L'alerte propriÃ©taire ne bloque jamais le flux mÃ©tier. */ }
+  } catch { /* L'alerte propriétaire ne bloque jamais le flux métier. */ }
 }
 
 // Reprise des alertes en attente au fil du trafic existant (sessions, webhooks,
-// lectures admin). AppelÃ©e par usage.mjs, stripe-webhook.mjs et admin.mjs.
+// lectures admin). Appelée par usage.mjs, stripe-webhook.mjs et admin.mjs.
 export async function flushOwnerAlerts(sql, { limit = 3, fetchEmail = fetch } = {}) {
   try {
     const pending = await sql`
