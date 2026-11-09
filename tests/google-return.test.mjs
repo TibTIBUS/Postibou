@@ -26,7 +26,7 @@ test('maps successful SDK exchange, preserves token and cleanup, discards sessio
       cookies: ['__Secure-neon-auth.session_token=signed; SameSite=None; Partitioned; Domain=neon.tech; Path=/', '__Secure-neon-auth.local.session_data=unused; Path=/']
     };
   })(callback('?neon_auth_session_verifier=opaque&redirect=https://attacker.example'));
-  assert.equal(response.headers.get('location'), SITE_ORIGIN + '/#compte');
+  assert.equal(response.headers.get('location'), SITE_ORIGIN + '/#outil');
   assert.equal(response.headers.getSetCookie().length, 3);
   assert.ok(response.headers.getSetCookie().every(cookie => !/Domain=|Partitioned|local.session_data/.test(cookie)));
   assert.ok(response.headers.getSetCookie().every(cookie => cookie.includes('SameSite=Lax') && cookie.includes('HttpOnly')));
