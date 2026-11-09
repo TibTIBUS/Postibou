@@ -42,7 +42,7 @@ export function createGoogleReturn(processCallback = processAuthMiddleware) {
       } catch { /* Never log the callback URL, verifier, or cookies. */ }
     }
     for (const name of challengeNames) headers.append('Set-Cookie', `${name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
-    headers.set('Location', SITE_ORIGIN + (success ? '/#compte' : '/?google=erreur#connexion'));
+    headers.set('Location', SITE_ORIGIN + (success ? '/#outil' : '/?google=erreur#connexion'));
     // Fixed destination also removes all OAuth parameters from browser history.
     return new Response(null, { status: 303, headers });
   };
