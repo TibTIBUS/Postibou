@@ -347,6 +347,9 @@
     }
     function updateQuota() {
       const planName = state.plan === 'gift' ? 'accès offert' : state.plan === 'monthly' ? 'abonnement' : 'essai de 7 jours';
+      $('#view-outil .trial-pill').textContent = state.user ? (state.plan === 'gift' ? 'Accès offert' : state.plan === 'monthly' ? 'Abonnement' : 'Essai gratuit · 7 jours') : 'Essai gratuit · 7 jours';
+      $('#view-outil .demo-notice strong').textContent = state.user ? 'Préparez votre texte' : 'Votre essai gratuit';
+      $('#view-outil .demo-notice span').textContent = state.user ? 'Décrivez une réalisation ou une actualité, choisissez une intention, puis cliquez sur « Adapter mon texte » ou « Sublimer mon texte ».' : 'Connectez-vous pour générer vos propres textes : 10 adaptations en 7 jours. La démonstration reste accessible sans compte.';
       if (state.user && !state.quotaReady) $('#quota-text').textContent = state.quotaError ? 'Impossible de vérifier vos crédits. Rechargez la page.' : 'Chargement de vos crédits…';
       else if (state.user) $('#quota-text').textContent = state.credits + ' adaptation' + (state.credits === 1 ? '' : 's') + ' restante' + (state.credits === 1 ? '' : 's') + ' sur votre ' + planName;
       else $('#quota-text').textContent = 'Démo sans compte · ' + state.credits + ' essai' + (state.credits === 1 ? '' : 's') + ' sur l’exemple';
@@ -597,5 +600,4 @@
 </script>
 </body>
 </html>
-
 
