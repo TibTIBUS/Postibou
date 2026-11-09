@@ -74,7 +74,7 @@ function renderSession(user) {
   nav.textContent = user ? 'Mon compte' : 'Se connecter';
   nav.href = user ? '#compte' : '#connexion';
   const cta = $('.nav-actions .button');
-  cta.textContent = user ? 'La démonstration' : 'Créer mon compte';
+  cta.textContent = user ? 'Préparer un texte' : 'Créer mon compte';
   cta.href = user ? '#outil' : '#connexion';
   $('#account-email').textContent = user?.email || 'Non connecté';
   $('#account-verified').textContent = user ? 'Adresse vérifiée' : 'Non connecté';
@@ -155,10 +155,10 @@ $('#auth-form').addEventListener('submit', event => {
         return;
       }
       if (!await refreshSession()) throw new Error('Votre session n’a pas pu être ouverte. Réessayez de vous connecter.');
-      location.hash = '#compte'; navigate('compte');
+      location.hash = '#outil'; navigate('outil');
     } else if (mode === 'verify') {
       await authRequest('verify', { email, otp });
-      if (await refreshSession()) { location.hash = '#compte'; navigate('compte'); }
+      if (await refreshSession()) { location.hash = '#outil'; navigate('outil'); }
       else { changeMode('login'); authMessage('Adresse vérifiée ! Vous pouvez maintenant vous connecter.'); }
     } else if (mode === 'recovery') {
       await authRequest('recovery', { email });
