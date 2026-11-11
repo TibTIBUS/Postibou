@@ -32,15 +32,15 @@ export function createWithdrawalHandler({fetchAuth=fetch,getDatabase=createDatab
       const receivedAt=new Date(proof.received_at).toISOString();
       const receipt=[
         'Postibou — Accusé de réception de votre déclaration de rétractation',
-        'Destinataire : Thibaut MARIE, EI, Localia ; SIREN 892 882 796',
+        'Destinataire : Thibaut MARIE, EI, Thibaut Marie | Sites Web & Logiciels ; SIREN 892 882 796',
         '92 rue des quatre rues, 50710 Créances, France',
-        'Contact : gestion.localia@gmail.com ; 06 85 22 47 20',
+        'Contact : contact@thibautmarie-web.fr ; 06 85 22 47 20',
         'Référence : '+proof.request_id,
         'Compte : '+proof.account_email,
         'Contrat : '+proof.subscription_id,
         'Date et heure de réception (UTC) : '+receivedAt,
         'Déclaration reçue : Je vous notifie ma rétractation du contrat portant sur mon abonnement Postibou.',
-        'La déclaration est enregistrée. Les suites, notamment le remboursement applicable, sont traitées par Localia.',
+        'La déclaration est enregistrée. Les suites, notamment le remboursement applicable, sont traitées par Thibaut Marie | Sites Web & Logiciels.',
         'Cet accusé ne constitue pas une confirmation de remboursement ni une renonciation à vos droits.'
       ].join('\n');
       return reply({requestId:proof.request_id,receivedAt,receipt});
