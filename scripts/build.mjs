@@ -9,6 +9,7 @@ const publishDirectory = new URL('dist/', projectRoot);
 if (await readFile(new URL('legal/conditions-' + TERMS_VERSION + '.txt', projectRoot), 'utf8') !== TERMS_DOCUMENT) throw new Error('Le document public diffère de la preuve contractuelle');
 await mkdir(publishDirectory, { recursive: true });
 await copyFile(new URL('index.html', projectRoot), new URL('index.html', publishDirectory));
+await copyFile(new URL('app-views.js', projectRoot), new URL('app-views.js', publishDirectory));
 await copyFile(new URL('auth.js', projectRoot), new URL('auth.js', publishDirectory));
 await copyFile(new URL('admin.js', projectRoot), new URL('admin.js', publishDirectory));
 await copyFile(new URL('homepage-demo.js', projectRoot), new URL('homepage-demo.js', publishDirectory));
