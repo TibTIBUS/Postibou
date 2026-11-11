@@ -34,3 +34,7 @@ await buildExemples({ publishDirectory });
 await cp(new URL('assets/', projectRoot), new URL('assets/', publishDirectory), { recursive: true });
 
 await buildBlog(fileURLToPath(new URL("blog/", publishDirectory)));
+
+// Le fichier importé par le navigateur est renommé au chemin public stable.
+await copyFile(new URL("assets/2-postibou-kit-media-2026-11-11.zip", projectRoot), new URL("assets/postibou-kit-media-2026-11-11.zip", publishDirectory));
+await copyFile(new URL("assets/2-postibou-kit-media-2026-11-11.zip", projectRoot), new URL("assets/postibou-kit-media-2026-10-09.zip", publishDirectory));
