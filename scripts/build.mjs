@@ -1,6 +1,7 @@
 import { TERMS_DOCUMENT, TERMS_VERSION } from '../netlify/functions/legal-policy.mjs';
 import { cp, copyFile, mkdir, readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { buildBlog } from './build-blog.mjs';
 import { buildExemples } from './exemples.mjs';
 
 const projectRoot = new URL('../', import.meta.url);
@@ -23,7 +24,7 @@ for (const file of await readdir(new URL('legal/', projectRoot))) {
 
 // Robots, sitemap and redirect rules published at the site root.
 for (const file of await readdir(new URL('public/', projectRoot))) {
-  await copyFile(new URL('public/' + file, projectRoot), new URL(file, publishDirectory));
+  await cp(new URL('public/' + file, projectRoot), new URL(file, publishDirectory), { recursive: true });
 }
 
 // Pages d'exemples de publications par métier (après la copie de public/ : le plan du site doit exister).
@@ -31,3 +32,5 @@ await buildExemples({ publishDirectory });
 
 // Include public images referenced by social sharing metadata.
 await cp(new URL('assets/', projectRoot), new URL('assets/', publishDirectory), { recursive: true });
+
+await buildBlog(fileURLToPath(new URL("blog/", publishDirectory)));
