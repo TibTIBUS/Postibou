@@ -1,3 +1,4 @@
+import { addEditorialSocialLinks } from './social-links.mjs';
 import { TERMS_DOCUMENT, TERMS_VERSION } from '../netlify/functions/legal-policy.mjs';
 import { cp, copyFile, mkdir, readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -39,3 +40,7 @@ await buildBlog(fileURLToPath(new URL("blog/", publishDirectory)));
 // Le fichier importé par le navigateur est renommé au chemin public stable.
 await copyFile(new URL("assets/2-postibou-kit-media-2026-11-11.zip", projectRoot), new URL("assets/postibou-kit-media-2026-11-11.zip", publishDirectory));
 await copyFile(new URL("assets/2-postibou-kit-media-2026-11-11.zip", projectRoot), new URL("assets/postibou-kit-media-2026-10-09.zip", publishDirectory));
+
+// Only editorial pages: never rewrite accepted legal archives.
+await addEditorialSocialLinks(fileURLToPath(new URL("blog/", publishDirectory)));
+await addEditorialSocialLinks(fileURLToPath(new URL("exemples/", publishDirectory)));
