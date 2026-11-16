@@ -23,7 +23,7 @@ Les essais se créent lors de l’inscription quand la base est configurée ; le
 ## Architecture
 
 - GitHub : code, dépôt `TibTIBUS/Postibou`.
-- Netlify : interface et fonctions serveur, projet `postibou`, équipe Localia.
+- Netlify : interface et fonctions serveur, projet `postibou`, équipe Thibaut Marie.
 - Neon + Neon Auth : projet `Postibou` (`fragrant-sound-24707274`), offre gratuite, AWS Francfort, branche `production` (`br-shiny-fog-b1oz5ggz`).
 - Stripe : Checkout, portail client et webhooks pour les abonnements.
 
