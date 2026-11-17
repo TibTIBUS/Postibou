@@ -137,6 +137,16 @@ async function runAuth(work) {
 function changeMode(mode) { authBusy = false; configureAuthForm(mode); authBusy = true; }
 $('#auth-form').addEventListener('submit', event => {
   event.preventDefault();
+  const formMode = state.authMode;
+  const formEmail = $('#email').value.trim();
+  const formPassword = $('#password').value;
+  const formOtp = $('#otp').value.trim();
+  const needsPassword = ['signup', 'login', 'reset'].includes(formMode);
+  const needsOtp = ['verify', 'reset'].includes(formMode);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formEmail)) { authMessage('Indiquez une adresse e-mail valide.'); $('#email').focus(); return; }
+  if (needsPassword && !formPassword) { authMessage('Indiquez votre mot de passe.'); $('#password').focus(); return; }
+  if (needsPassword && formMode !== 'login' && (formPassword.length < 8 || formPassword.length > 128)) { authMessage('Le mot de passe doit contenir entre 8 et 128 caractères.'); $('#password').focus(); return; }
+  if (needsOtp && !/^\d{6}$/.test(formOtp)) { authMessage('Saisissez le code à 6 chiffres reçu par e-mail.'); $('#otp').focus(); return; }
   runAuth(async () => {
     const mode = state.authMode;
     const email = $('#email').value.trim();
@@ -309,3 +319,4 @@ async function recoverPayment() {
 }
 $('#sync-payment').addEventListener('click',recoverPayment);
 if(new URLSearchParams(location.search).get('billing') === 'success') { try { const clean = new URL(location.href); clean.searchParams.delete('billing'); history.replaceState(null, '', clean.pathname + clean.search + clean.hash); } catch {} sessionCheck?.then(()=>recoverPayment()).catch(()=>{}); }
+
